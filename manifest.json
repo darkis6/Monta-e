@@ -1,0 +1,15 @@
+{
+  "name": "Rejestr Montaży VAT",
+  "short_name": "Montaże VAT",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f9",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3602/3602145.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

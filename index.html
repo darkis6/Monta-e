@@ -3,57 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rejestr Klienów i Montaży VAT</title>
+    <title>Montaże VAT - Rejestr Klienci</title>
     <link rel="manifest" href="manifest.json">
     <style>
         :root {
-            --bg-color: #f4f6f9;
+            --primary: #4f46e5;
+            --primary-light: #eeef2e;
+            --bg: #f8fafc;
             --card-bg: #ffffff;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --text: #1f2937;
-            --border: #e5e7eb;
-            --vat-8: #059669;
-            --vat-23: #d97706;
-            --status-wait: #ef4444;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --vat8-color: #059669;
+            --vat8-bg: #ecfdf5;
+            --vat23-color: #d97706;
+            --vat23-bg: #fffbeb;
+            --alert-bg: #fef2f2;
+            --alert-text: #991b1b;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text);
-            padding: 12px;
-            max-width: 600px;
+            background-color: var(--bg);
+            color: var(--text-main);
+            padding: 16px;
+            max-width: 500px;
             margin: 0 auto;
-            padding-bottom: 80px;
+            padding-bottom: 90px;
         }
 
         header {
+            margin-bottom: 20px;
             text-align: center;
-            margin-bottom: 16px;
         }
 
         h1 {
-            font-size: 1.3rem;
-            color: #1e293b;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
         }
 
+        /* KARTY I FORMULARZE */
         .card {
             background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
             padding: 16px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             margin-bottom: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
         }
 
         .form-group {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .form-row {
@@ -69,79 +76,185 @@
             display: block;
             font-size: 0.8rem;
             font-weight: 600;
-            margin-bottom: 4px;
-            color: #4b5563;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        input, select, textarea, button {
+        input, select, textarea {
             width: 100%;
-            padding: 10px 12px;
-            border-radius: 8px;
+            padding: 12px;
+            border-radius: 10px;
             border: 1px solid var(--border);
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+            background: #f8fafc;
+            color: var(--text-main);
             outline: none;
+            transition: all 0.2s;
         }
 
-        input:focus, select:focus, textarea:focus {
+        input:focus, textarea:focus {
+            background: #fff;
             border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
-        .radio-group {
+        /* WYBÓR VAT */
+        .vat-selector {
             display: flex;
             gap: 10px;
         }
 
-        .radio-label {
+        .vat-option {
             flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px;
+            text-align: center;
+            padding: 10px;
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
-            font-weight: bold;
-            font-size: 0.85rem;
-        }
-
-        .radio-label.vat8-label { color: var(--vat-8); }
-        .radio-label.vat23-label { color: var(--vat-23); }
-
-        .radio-label:has(input:checked) {
-            background-color: #f0fdf4;
-            border-color: var(--vat-8);
-        }
-
-        .radio-label.vat23-label:has(input:checked) {
-            background-color: #fffbeb;
-            border-color: var(--vat-23);
-        }
-
-        .radio-label input { display: none; }
-
-        .btn-submit {
-            background-color: var(--primary);
-            color: white;
             font-weight: 600;
+            font-size: 0.9rem;
+            background: #f8fafc;
+        }
+
+        .vat-option input { display: none; }
+
+        .vat-option.v8:has(input:checked) {
+            background: var(--vat8-bg);
+            color: var(--vat8-color);
+            border-color: var(--vat8-color);
+        }
+
+        .vat-option.v23:has(input:checked) {
+            background: var(--vat23-bg);
+            color: var(--vat23-color);
+            border-color: var(--vat23-color);
+        }
+
+        /* PRZYCISKI */
+        .btn-primary {
+            width: 100%;
+            background: var(--primary);
+            color: white;
             border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
             cursor: pointer;
-            padding: 12px;
-            border-radius: 8px;
+            margin-top: 6px;
         }
 
         .btn-cancel {
-            background-color: #6b7280;
+            width: 100%;
+            background: var(--text-muted);
             color: white;
-            font-weight: 600;
             border: none;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.85rem;
             cursor: pointer;
             margin-top: 8px;
-            padding: 8px;
-            border-radius: 8px;
         }
 
-        /* Nawigacja Dolna */
-        .nav-bar {
+        /* SEKCJE */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* KARTY KLIENTÓW */
+        .client-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .client-card.vat-8 { border-left: 5px solid var(--vat8-color); }
+        .client-card.vat-23 { border-left: 5px solid var(--vat23-color); }
+
+        .card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .client-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+        }
+
+        .badge-8 { background: var(--vat8-bg); color: var(--vat8-color); }
+        .badge-23 { background: var(--vat23-bg); color: var(--vat23-color); }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            margin-top: 8px;
+        }
+
+        .full-width { grid-column: span 2; }
+
+        .remind-pill {
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            background: var(--vat8-bg);
+            color: var(--vat8-color);
+        }
+
+        .remind-pill.overdue {
+            background: var(--alert-bg);
+            color: var(--alert-text);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-act {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.75rem;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .act-check { background: #dcfce7; color: #166534; }
+        .act-edit { background: #e0f2fe; color: #075985; }
+        .act-del { background: #fee2e2; color: #991b1b; }
+
+        /* PASEK NAWIGACYJNY */
+        .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
@@ -149,27 +262,28 @@
             background: #ffffff;
             border-top: 1px solid var(--border);
             display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
-            max-width: 600px;
+            max-width: 500px;
             margin: 0 auto;
-            z-index: 1000;
+            height: 60px;
+            z-index: 100;
         }
 
-        .nav-item {
+        .nav-btn {
+            flex: 1;
             background: none;
             border: none;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             font-size: 0.75rem;
-            color: #6b7280;
+            color: var(--text-muted);
+            font-weight: 600;
             cursor: pointer;
         }
 
-        .nav-item.active {
+        .nav-btn.active {
             color: var(--primary);
-            font-weight: bold;
         }
 
         .nav-icon {
@@ -177,168 +291,74 @@
             margin-bottom: 2px;
         }
 
-        /* Sekcje */
-        .section {
-            display: none;
-        }
-
-        .section.active {
-            display: block;
-        }
-
-        /* Karty Klientów */
-        .entry-card {
-            background: var(--card-bg);
-            border-radius: 10px;
-            padding: 12px;
+        /* FILTRY */
+        .filter-bar {
+            display: flex;
+            gap: 6px;
             margin-bottom: 12px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-            border-left: 5px solid var(--border);
         }
 
-        .entry-card.vat-8 { border-left-color: var(--vat-8); }
-        .entry-card.vat-23 { border-left-color: var(--vat-23); }
-
-        .entry-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-
-        .client-name {
-            font-weight: bold;
-            font-size: 1.05rem;
-            color: #1e293b;
-        }
-
-        .badge {
-            font-size: 0.75rem;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-weight: 600;
-        }
-
-        .badge-8 { background: #d1fae5; color: var(--vat-8); }
-        .badge-23 { background: #fef3c7; color: var(--vat-23); }
-
-        .details-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            font-size: 0.8rem;
-            color: #4b5563;
-            margin-top: 8px;
-            background: #f8fafc;
-            padding: 8px;
-            border-radius: 6px;
-        }
-
-        .details-full {
-            grid-column: span 2;
-        }
-
-        .remind-box {
-            margin-top: 8px;
-            padding: 6px 8px;
-            border-radius: 6px;
-            background: #fef2f2;
-            color: #991b1b;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .remind-box.ok {
-            background: #f0fdf4;
-            color: #166534;
-        }
-
-        .entry-actions {
-            margin-top: 10px;
-            display: flex;
-            gap: 6px;
-        }
-
-        .action-btn {
+        .filter-chip {
             flex: 1;
-            padding: 6px;
+            padding: 8px;
             font-size: 0.75rem;
-            border-radius: 6px;
-            border: none;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-weight: 600;
             cursor: pointer;
             text-align: center;
         }
 
-        .btn-check { background: #dcfce7; color: #15803d; }
-        .btn-edit { background: #e0f2fe; color: #0369a1; }
-        .btn-delete { background: #fee2e2; color: #b91c1c; }
-
-        .filters {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 12px;
-        }
-
-        .filter-btn {
-            flex: 1;
-            padding: 6px;
-            font-size: 0.75rem;
-            background: #e2e8f0;
-            border: none;
-            border-radius: 6px;
-        }
-
-        .filter-btn.active {
+        .filter-chip.active {
             background: var(--primary);
             color: white;
+            border-color: var(--primary);
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1 id="pageTitle">Rejestr Klienci & Montaże</h1>
+        <h1>Montaże & Rejestr VAT</h1>
     </header>
 
-    <!-- EKRAN 1: FORMULARZ DANYCH KLIENTA -->
-    <div id="section-form" class="section active">
+    <!-- ZAKŁADKA 1: FORMULARZ KLIENTA -->
+    <div id="tab-form" class="tab-content active">
         <div class="card">
-            <form id="clientForm">
+            <form id="appForm">
                 <input type="hidden" id="editId" value="">
 
                 <div class="form-group">
-                    <label>Imię i Nazwisko / Nazwa Klienta *</label>
-                    <input type="text" id="clientName" placeholder="np. Jan Kowalski" required>
+                    <label>Klient / Firma *</label>
+                    <input type="text" id="clientName" placeholder="Imię i nazwisko" required>
                 </div>
 
                 <div class="form-group">
                     <label>Stawka VAT *</label>
-                    <div class="radio-group">
-                        <label class="radio-label vat8-label">
-                            <input type="radio" name="vatRate" value="8" checked> VAT 8%
+                    <div class="vat-selector">
+                        <label class="vat-option v8">
+                            <input type="radio" name="vat" value="8" checked> VAT 8%
                         </label>
-                        <label class="radio-label vat23-label">
-                            <input type="radio" name="vatRate" value="23"> VAT 23%
+                        <label class="vat-option v23">
+                            <input type="radio" name="vat" value="23"> VAT 23%
                         </label>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Adres zamieszkania / Montażu</label>
-                    <input type="text" id="address" placeholder="np. ul. Lipowa 12, Warszawa">
+                    <label>Adres montażu</label>
+                    <input type="text" id="address" placeholder="Ulica, numer, miasto">
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Nr transakcji</label>
-                        <input type="text" id="transactionNo" placeholder="np. TR/102/2026">
+                        <input type="text" id="transNo" placeholder="TR/...">
                     </div>
                     <div class="form-group">
                         <label>Nr umowy</label>
-                        <input type="text" id="contractNo" placeholder="np. UM/45/2026">
+                        <input type="text" id="contractNo" placeholder="UM/...">
                     </div>
                 </div>
 
@@ -355,219 +375,194 @@
 
                 <div class="form-group">
                     <label>Montażysta</label>
-                    <input type="text" id="fitter" placeholder="np. Pan Piotr / Ekipa 2">
+                    <input type="text" id="fitter" placeholder="Imię / Ekipa">
                 </div>
 
                 <div class="form-group">
-                    <label>Dodatkowe uwagi</label>
-                    <textarea id="notes" rows="2" placeholder="Opcjonalne szczegóły..."></textarea>
+                    <label>Uwagi</label>
+                    <textarea id="notes" rows="2" placeholder="Dodatkowe informacje..."></textarea>
                 </div>
 
-                <button type="submit" id="submitBtn" class="btn-submit">Zapisz Klienta (+Przypomnienie 5 tyg.)</button>
+                <button type="submit" id="saveBtn" class="btn-primary">Zapisz Klienta</button>
                 <button type="button" id="cancelBtn" class="btn-cancel" style="display:none;" onclick="resetForm()">Anuluj edycję</button>
             </form>
         </div>
     </div>
 
-    <!-- EKRAN 2: LISTA KLIENTÓW I MONTAŻY -->
-    <div id="section-list" class="section">
-        <div class="filters">
-            <button class="filter-btn active" onclick="setFilter('all')">Wszyscy</button>
-            <button class="filter-btn" onclick="setFilter('8')">VAT 8%</button>
-            <button class="filter-btn" onclick="setFilter('23')">VAT 23%</button>
-            <button class="filter-btn" onclick="setFilter('pending')">Do sprawdzenia</button>
+    <!-- ZAKŁADKA 2: LISTA KLIENTÓW -->
+    <div id="tab-list" class="tab-content">
+        <div class="filter-bar">
+            <button class="filter-chip active" onclick="applyFilter('all', this)">Wszyscy</button>
+            <button class="filter-chip" onclick="applyFilter('8', this)">VAT 8%</button>
+            <button class="filter-chip" onclick="applyFilter('23', this)">VAT 23%</button>
+            <button class="filter-chip" onclick="applyFilter('pending', this)">Do weryfikacji</button>
         </div>
 
-        <div id="clientsList"></div>
+        <div id="cardsContainer"></div>
     </div>
 
-    <!-- DOLNE MENU NAWIGACYJNE -->
-    <nav class="nav-bar">
-        <button class="nav-item active" onclick="switchSection('form', this)">
+    <!-- DOLNY PASEK NAWIGACJI -->
+    <nav class="bottom-nav">
+        <button class="nav-btn active" onclick="showTab('form', this)">
             <span class="nav-icon">➕</span>
             <span>Nowy Klient</span>
         </button>
-        <button class="nav-item" onclick="switchSection('list', this)">
+        <button class="nav-btn" onclick="showTab('list', this)">
             <span class="nav-icon">📋</span>
             <span>Lista Klientów</span>
         </button>
     </nav>
 
     <script>
+        // Domyślna data zamówienia na dzisiaj
         document.getElementById('orderDate').valueAsDate = new Date();
 
-        let clients = JSON.parse(localStorage.getItem('vat_clients_data')) || [];
-        let currentFilter = 'all';
+        let database = JSON.parse(localStorage.getItem('app_clients_db')) || [];
+        let activeFilter = 'all';
 
-        function switchSection(sec, btn) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-            
-            document.getElementById(`section-${sec}`).classList.add('active');
-            btn.classList.add('active');
+        function saveToStorage() {
+            localStorage.setItem('app_clients_db', JSON.stringify(database));
+        }
 
-            if (sec === 'list') {
-                renderClients();
+        function showTab(tabName, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+            document.getElementById('tab-' + tabName).classList.add('active');
+            if (btn) btn.classList.add('active');
+
+            if (tabName === 'list') {
+                renderList();
             }
         }
 
-        document.getElementById('clientForm').addEventListener('submit', function(e) {
+        document.getElementById('appForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
             const editId = document.getElementById('editId').value;
             const clientName = document.getElementById('clientName').value;
-            const vatRate = document.querySelector('input[name="vatRate"]:checked').value;
+            const vat = document.querySelector('input[name="vat"]:checked').value;
             const address = document.getElementById('address').value;
-            const transactionNo = document.getElementById('transactionNo').value;
+            const transNo = document.getElementById('transNo').value;
             const contractNo = document.getElementById('contractNo').value;
             const measureDate = document.getElementById('measureDate').value;
             const orderDateVal = document.getElementById('orderDate').value;
             const fitter = document.getElementById('fitter').value;
             const notes = document.getElementById('notes').value;
 
-            // Obliczenie daty przypomnienia (+35 dni od daty zamówienia)
-            const orderDate = new Date(orderDateVal);
-            const remindDate = new Date(orderDate);
-            remindDate.setDate(remindDate.getDate() + 35);
+            // Liczenie 5 tygodni (+35 dni) od daty zamówienia
+            const orderDateObj = new Date(orderDateVal);
+            const remindDateObj = new Date(orderDateObj);
+            remindDateObj.setDate(remindDateObj.getDate() + 35);
+            const remindDateVal = remindDateObj.toISOString().split('T')[0];
 
-            const clientData = {
+            const record = {
                 id: editId ? Number(editId) : Date.now(),
                 clientName,
-                vatRate,
+                vat,
                 address,
-                transactionNo,
+                transNo,
                 contractNo,
                 measureDate,
                 orderDate: orderDateVal,
-                remindDate: remindDate.toISOString().split('T')[0],
+                remindDate: remindDateVal,
                 fitter,
                 notes,
-                checked: editId ? (clients.find(c => c.id == editId)?.checked || false) : false
+                done: editId ? (database.find(item => item.id == Number(editId))?.done || false) : false
             };
 
             if (editId) {
-                clients = clients.map(c => c.id === Number(editId) ? clientData : c);
+                database = database.map(item => item.id === Number(editId) ? record : item);
             } else {
-                clients.unshift(clientData);
+                database.unshift(record);
             }
 
-            saveData();
+            saveToStorage();
             resetForm();
-            switchSection('list', document.querySelectorAll('.nav-item')[1]);
+            showTab('list', document.querySelectorAll('.nav-btn')[1]);
         });
 
-        function saveData() {
-            localStorage.setItem('vat_clients_data', JSON.stringify(clients));
-        }
-
         function resetForm() {
-            document.getElementById('clientForm').reset();
+            document.getElementById('appForm').reset();
             document.getElementById('editId').value = '';
-            document.getElementById('submitBtn').innerText = 'Zapisz Klienta (+Przypomnienie 5 tyg.)';
+            document.getElementById('saveBtn').innerText = 'Zapisz Klienta';
             document.getElementById('cancelBtn').style.display = 'none';
             document.getElementById('orderDate').valueAsDate = new Date();
         }
 
-        function editClient(id) {
-            const item = clients.find(c => c.id === id);
+        function editRecord(id) {
+            const item = database.find(i => i.id === id);
             if (!item) return;
 
             document.getElementById('editId').value = item.id;
             document.getElementById('clientName').value = item.clientName;
-            document.querySelector(`input[name="vatRate"][value="${item.vatRate}"]`).checked = true;
+            document.querySelector(`input[name="vat"][value="${item.vat}"]`).checked = true;
             document.getElementById('address').value = item.address || '';
-            document.getElementById('transactionNo').value = item.transactionNo || '';
+            document.getElementById('transNo').value = item.transNo || '';
             document.getElementById('contractNo').value = item.contractNo || '';
             document.getElementById('measureDate').value = item.measureDate || '';
             document.getElementById('orderDate').value = item.orderDate || '';
             document.getElementById('fitter').value = item.fitter || '';
             document.getElementById('notes').value = item.notes || '';
 
-            document.getElementById('submitBtn').innerText = 'Zapisz Zmiany';
+            document.getElementById('saveBtn').innerText = 'Zapisz Zmiany';
             document.getElementById('cancelBtn').style.display = 'block';
 
-            switchSection('form', document.querySelectorAll('.nav-item')[0]);
+            showTab('form', document.querySelectorAll('.nav-btn')[0]);
         }
 
-        function toggleCheck(id) {
-            clients = clients.map(c => c.id === id ? {...c, checked: !c.checked} : c);
-            saveData();
-            renderClients();
+        function toggleDone(id) {
+            database = database.map(item => item.id === id ? {...item, done: !item.done} : item);
+            saveToStorage();
+            renderList();
         }
 
-        function deleteClient(id) {
-            if (confirm("Czy na pewno chcesz usunąć dane tego klienta?")) {
-                clients = clients.filter(c => c.id !== id);
-                saveData();
-                renderClients();
+        function deleteRecord(id) {
+            if (confirm("Usunąć tego klienta?")) {
+                database = database.filter(item => item.id !== id);
+                saveToStorage();
+                renderList();
             }
         }
 
-        function setFilter(filter) {
-            currentFilter = filter;
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            renderClients();
+        function applyFilter(filterType, btn) {
+            activeFilter = filterType;
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            renderList();
         }
 
-        function renderClients() {
-            const listEl = document.getElementById('clientsList');
-            listEl.innerHTML = '';
+        function renderList() {
+            const container = document.getElementById('cardsContainer');
+            container.innerHTML = '';
+            const today = new Date().toISOString().split('T')[0];
 
-            const todayStr = new Date().toISOString().split('T')[0];
-
-            const filtered = clients.filter(item => {
-                if (currentFilter === '8') return item.vatRate === '8';
-                if (currentFilter === '23') return item.vatRate === '23';
-                if (currentFilter === 'pending') return !item.checked;
+            const filtered = database.filter(item => {
+                if (activeFilter === '8') return item.vat === '8';
+                if (activeFilter === '23') return item.vat === '23';
+                if (activeFilter === 'pending') return !item.done;
                 return true;
             });
 
             if (filtered.length === 0) {
-                listEl.innerHTML = '<p style="text-align:center; color:#9ca3af; padding: 20px;">Brak wpisów.</p>';
+                container.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding: 30px;">Brak zapisanych klientów.</p>';
                 return;
             }
 
             filtered.forEach(item => {
+                const isOverdue = !item.done && item.remindDate <= today;
                 const card = document.createElement('div');
-                card.className = `entry-card vat-${item.vatRate}`;
-
-                const isDue = !item.checked && item.remindDate <= todayStr;
+                card.className = `client-card vat-${item.vat}`;
 
                 card.innerHTML = `
-                    <div class="entry-header">
-                        <span class="client-name">${item.clientName}</span>
-                        <span class="badge badge-${item.vatRate}">VAT ${item.vatRate}%</span>
+                    <div class="card-head">
+                        <span class="client-title">${item.clientName}</span>
+                        <span class="badge badge-${item.vat}">VAT ${item.vat}%</span>
                     </div>
 
-                    <div class="details-grid">
-                        ${item.address ? `<div class="details-full">📍 <strong>Adres:</strong> ${item.address}</div>` : ''}
-                        ${item.transactionNo ? `<div>🔢 <strong>Nr transakcji:</strong> ${item.transactionNo}</div>` : ''}
-                        ${item.contractNo ? `<div>📄 <strong>Nr umowy:</strong> ${item.contractNo}</div>` : ''}
-                        ${item.measureDate ? `<div>📐 <strong>Pomiar:</strong> ${item.measureDate}</div>` : ''}
+                    <div class="info-grid">
+                        ${item.address ? `<div class="full-width">📍 <strong>Adres:</strong> ${item.address}</div>` : ''} ${item.transNo ? `<div>🔢 <strong>Transakcja:</strong> ${item.transNo}</div>` : ''}
+                        ${item.contractNo ? `<div>📄 <strong>Umowa:</strong> ${item.contractNo}</div>` : ''} ${item.measureDate ? `<div>📐 <strong>Pomiar:</strong> ${item.measureDate}</div>` : ''}
                         <div>📅 <strong>Zamówienie:</strong> ${item.orderDate}</div>
-                        ${item.fitter ? `<div class="details-full">👷 <strong>Montażysta:</strong> ${item.fitter}</div>` : ''}
-                        ${item.notes ? `<div class="details-full">📝 <strong>Uwagi:</strong> ${item.notes}</div>` : ''}
-                    </div>
-
-                    <div class="remind-box ${item.checked ? 'ok' : (isDue ? '' : 'ok')}">
-                        <span>⏰ Przypomnienie (5 tyg.): <strong>${item.remindDate}</strong></span>
-                        <span>${item.checked ? '✓ Gotowe' : (isDue ? '⚠️ SPRAWDŹ!' : 'W trakcie')}</span>
-                    </div>
-
-                    <div class="entry-actions">
-                        <button class="action-btn btn-check" onclick="toggleCheck(${item.id})">
-                            ${item.checked ? '✓ Sprawdzone' : '◯ Odhacz'}
-                        </button>
-                        <button class="action-btn btn-edit" onclick="editClient(${item.id})">Edytuj</button>
-                        <button class="action-btn btn-delete" onclick="deleteClient(${item.id})">Usuń</button>
-                    </div>
-                `;
-                listEl.appendChild(card);
-            });
-        }
-
-        renderClients();
-    </script>
-</body>
-</html>
+                        ${item.fitter ? `<div class="full-width">👷 <strong>Montażysta:</strong> ${item.fitter}</div>` : ''}
+                        ${item.notes ? `<div class="full-width

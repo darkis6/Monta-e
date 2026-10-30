@@ -141,8 +141,8 @@
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
         }
 
-        /* ZARZĄDZANIE LISTĄ RODZAJÓW MONTAŻU */
-        .assembly-manager {
+        /* ZARZĄDZANIE LISTAMI ROZWIJANYMI */
+        .manager-box {
             background: var(--input-bg);
             border: 1px solid var(--border);
             border-radius: 10px;
@@ -150,16 +150,16 @@
             margin-top: 6px;
         }
 
-        .assembly-list-items {
+        .tags-list-items {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
             margin-bottom: 8px;
-            max-height: 100px;
+            max-height: 90px;
             overflow-y: auto;
         }
 
-        .assembly-tag {
+        .tag-pill {
             background: var(--card-bg);
             border: 1px solid var(--border);
             padding: 4px 8px;
@@ -171,7 +171,7 @@
             color: var(--text-main);
         }
 
-        .assembly-tag button {
+        .tag-pill button {
             background: none;
             border: none;
             color: var(--alert-text);
@@ -621,14 +621,10 @@
 
                 <div class="form-group">
                     <label>Rodzaj montażu</label>
-                    <select id="assemblyType">
-                        <!-- Wypełniane dynamicznie -->
-                    </select>
-                    
-                    <!-- Panel zarządzania listą rodzajów montażu -->
-                    <div class="assembly-manager">
+                    <select id="assemblyType"></select>
+                    <div class="manager-box">
                         <label style="font-size: 0.7rem; margin-bottom: 4px;">Zarządzaj rodzajami:</label>
-                        <div id="assemblyTagsList" class="assembly-list-items"></div>
+                        <div id="assemblyTagsList" class="tags-list-items"></div>
                         <div class="inline-add-row">
                             <input type="text" id="newAssemblyInput" placeholder="Nowy rodzaj...">
                             <button type="button" class="btn-small" onclick="addNewAssemblyType()">Dodaj</button>
@@ -665,7 +661,15 @@
 
                 <div class="form-group">
                     <label>Montażysta</label>
-                    <input type="text" id="fitter" placeholder="Imię / Ekipa">
+                    <select id="fitter"></select>
+                    <div class="manager-box">
+                        <label style="font-size: 0.7rem; margin-bottom: 4px;">Zarządzaj montażystami:</label>
+                        <div id="fitterTagsList" class="tags-list-items"></div>
+                        <div class="inline-add-row">
+                            <input type="text" id="newFitterInput" placeholder="Nowy montażysta...">
+                            <button type="button" class="btn-small" onclick="addNewFitter()">Dodaj</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -803,6 +807,7 @@
 
         let database = JSON.parse(localStorage.getItem('app_clients_db')) || [];
         let assemblyTypes = JSON.parse(localStorage.getItem('app_assembly_types')) || ['Okna', 'Drzwi', 'Rolety', 'Bramy', 'Żaluzje'];
+        let fittersList = JSON.parse(localStorage.getItem('app_fitters_list')) || ['Ekipa 1', 'Ekipa 2', 'Pan Piotr', 'Pan Marek'];
         let activeFilter = 'all';
 
         let currentCalDate = new Date();
@@ -811,50 +816,46 @@
         function saveToStorage() {
             localStorage.setItem('app_clients_db', JSON.stringify(database));
             localStorage.setItem('app_assembly_types', JSON.stringify(assemblyTypes));
+            localStorage.setItem('app_fitters_list', JSON.stringify(fittersList));
         }
 
+        // --- ZARZĄDZANIE RODZAJAMI MONTAŻU ---
         function renderAssemblyDropdownAndManager() {
             const selectEl = document.getElementById('assemblyType');
             const tagsContainer = document.getElementById('assemblyTagsList');
-            
             const currentVal = selectEl.value;
+            
             selectEl.innerHTML = '';
             tagsContainer.innerHTML = '';
 
             assemblyTypes.forEach(type => {
-                // Opcja do selecta
                 const opt = document.createElement('option');
                 opt.value = type;
                 opt.innerText = type;
                 selectEl.appendChild(opt);
 
-                // Tag do zarządzania w formularzu
                 const tag = document.createElement('div');
-                tag.className = 'assembly-tag';
+                tag.className = 'tag-pill';
                 tag.innerHTML = `<span>${type}</span> <button type="button" onclick="removeAssemblyType('${type}')">&times;</button>`;
                 tagsContainer.appendChild(tag);
             });
 
-            if (assemblyTypes.includes(currentVal)) {
-                selectEl.value = currentVal;
-            }
+            if (assemblyTypes.includes(currentVal)) selectEl.value = currentVal;
         }
 
         function addNewAssemblyType() {
             const input = document.getElementById('newAssemblyInput');
             const val = input.value.trim();
             if (!val) return;
-
             if (assemblyTypes.includes(val)) {
                 alert('Taki rodzaj montażu już istnieje!');
                 return;
             }
-
             assemblyTypes.push(val);
             saveToStorage();
             renderAssemblyDropdownAndManager();
             input.value = '';
-            selectEl.value = val;
+            document.getElementById('assemblyType').value = val;
         }
 
         function removeAssemblyType(type) {
@@ -869,7 +870,60 @@
             }
         }
 
+        // --- ZARZĄDZANIE MONTAŻYSTAMI ---
+        function renderFittersDropdownAndManager() {
+            const selectEl = document.getElementById('fitter');
+            const tagsContainer = document.getElementById('fitterTagsList');
+            const currentVal = selectEl.value;
+            
+            selectEl.innerHTML = '';
+            tagsContainer.innerHTML = '';
+
+            fittersList.forEach(fitter => {
+                const opt = document.createElement('option');
+                opt.value = fitter;
+                opt.innerText = fitter;
+                selectEl.appendChild(opt);
+
+                const tag = document.createElement('div');
+                tag.className = 'tag-pill';
+                tag.innerHTML = `<span>${fitter}</span> <button type="button" onclick="removeFitter('${fitter}')">&times;</button>`;
+                tagsContainer.appendChild(tag);
+            });
+
+            if (fittersList.includes(currentVal)) selectEl.value = currentVal;
+        }
+
+        function addNewFitter() {
+            const input = document.getElementById('newFitterInput');
+            const val = input.value.trim();
+            if (!val) return;
+            if (fittersList.includes(val)) {
+                alert('Taki montażysta już istnieje!');
+                return;
+            }
+            fittersList.push(val);
+            saveToStorage();
+            renderFittersDropdownAndManager();
+            input.value = '';
+            document.getElementById('fitter').value = val;
+        }
+
+        function removeFitter(fitter) {
+            if (fittersList.length <= 1) {
+                alert('Musisz zostawić przynajmniej jednego montażystę.');
+                return;
+            }
+            if (confirm(`Usunąć montażystę "${fitter}"?`)) {
+                fittersList = fittersList.filter(f => f !== fitter);
+                saveToStorage();
+                renderFittersDropdownAndManager();
+            }
+        }
+
+        // Inicjalizacja list przy starcie
         renderAssemblyDropdownAndManager();
+        renderFittersDropdownAndManager();
 
         function showTab(tabName, btn) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -942,6 +996,7 @@
             document.getElementById('cancelBtn').style.display = 'none';
             document.getElementById('orderDate').valueAsDate = new Date();
             renderAssemblyDropdownAndManager();
+            renderFittersDropdownAndManager();
         }
 
         function editRecord(id) {
@@ -957,7 +1012,7 @@
             document.getElementById('contractNo').value = item.contractNo || '';
             document.getElementById('measureDate').value = item.measureDate || '';
             document.getElementById('orderDate').value = item.orderDate || '';
-            document.getElementById('fitter').value = item.fitter || '';
+            document.getElementById('fitter').value = item.fitter || fittersList[0];
             document.getElementById('notes').value = item.notes || '';
 
             document.getElementById('saveBtn').innerText = 'Zapisz Zmiany';

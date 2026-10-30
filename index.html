@@ -296,7 +296,119 @@
             background: #f8fafc;
         }
 
-        /* DOLNE MENU NAWIGACJI (4 PRZYCISKI) */
+        /* WIDOK KALENDARZA W KRATKĘ */
+        .cal-toggle-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .cal-toggle-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.75rem;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .cal-toggle-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .grid-calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .grid-calendar-header h2 {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .cal-nav-btn {
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .grid-calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .grid-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .grid-day {
+            aspect-ratio: 1;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .grid-day.empty {
+            background: transparent;
+            border-color: transparent;
+            cursor: default;
+        }
+
+        .grid-day.today {
+            border-color: var(--primary);
+            background: #eeef2e15;
+            color: var(--primary);
+            font-weight: 800;
+        }
+
+        .grid-day.selected {
+            background: var(--primary);
+            color: white;
+        }
+
+        .day-dots {
+            display: flex;
+            gap: 2px;
+            margin-top: 2px;
+        }
+
+        .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+
+        .dot-8 { background: var(--vat8-color); }
+        .dot-23 { background: var(--vat23-color); }
+
+        /* DOLNY PASEK NAWIGACJI (4 PRZYCISKI) */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -476,12 +588,34 @@
 
     <!-- ZAKŁADKA 4: KALENDARZ -->
     <div id="tab-calendar" class="tab-content">
-        <div class="card">
+        <div class="cal-toggle-bar">
+            <button class="cal-toggle-btn active" onclick="switchCalView('grid', this)">📆 Siatka miesiąca</button>
+            <button class="cal-toggle-btn" onclick="switchCalView('single', this)">🔍 Wybór dnia</button>
+        </div>
+
+        <!-- WIDOK 1: KLASYCZNA SIATKA (KRATKA) -->
+        <div id="calViewGrid" class="card">
+            <div class="grid-calendar-header">
+                <button class="cal-nav-btn" onclick="changeMonth(-1)">◄</button>
+                <h2 id="currentMonthYear">-- ----</h2>
+                <button class="cal-nav-btn" onclick="changeMonth(1)">►</button>
+            </div>
+
+            <div class="grid-calendar-days">
+                <div>Pn</div><div>Wt</div><div>Śr</div><div>Cz</div><div>Pt</div><div>Sob</div><div>Nd</div>
+            </div>
+
+            <div id="gridCalendarDaysContainer" class="grid-calendar-grid"></div>
+        </div>
+
+        <!-- WIDOK 2: WYBÓR DATA PICKEREREM -->
+        <div id="calViewSingle" class="card" style="display:none;">
             <div class="form-group" style="margin-bottom:0;">
-                <label>Wybierz dzień:</label>
-                <input type="date" id="calendarPicker" onchange="renderCalendarEvents()">
+                <label>Wybierz konkretny dzień:</label>
+                <input type="date" id="calendarPicker" onchange="renderCalendarEvents(this.value)">
             </div>
         </div>
+
         <div id="calendarEventsContainer"></div>
     </div>
 
@@ -512,6 +646,9 @@
         let database = JSON.parse(localStorage.getItem('app_clients_db')) || [];
         let activeFilter = 'all';
 
+        let currentCalDate = new Date();
+        let selectedCalDateStr = new Date().toISOString().split('T')[0];
+
         function saveToStorage() {
             localStorage.setItem('app_clients_db', JSON.stringify(database));
         }
@@ -528,7 +665,8 @@
             } else if (tabName === 'excel') {
                 renderExcelTable();
             } else if (tabName === 'calendar') {
-                renderCalendarEvents();
+                renderGridCalendar();
+                renderCalendarEvents(selectedCalDateStr);
             }
         }
 
@@ -611,7 +749,10 @@
             saveToStorage();
             renderList();
             if (document.getElementById('tab-excel').classList.contains('active')) renderExcelTable();
-            if (document.getElementById('tab-calendar').classList.contains('active')) renderCalendarEvents();
+            if (document.getElementById('tab-calendar').classList.contains('active')) {
+                renderGridCalendar();
+                renderCalendarEvents(selectedCalDateStr);
+            }
         }
 
         function deleteRecord(id) {
@@ -620,7 +761,10 @@
                 saveToStorage();
                 renderList();
                 if (document.getElementById('tab-excel').classList.contains('active')) renderExcelTable();
-                if (document.getElementById('tab-calendar').classList.contains('active')) renderCalendarEvents();
+                if (document.getElementById('tab-calendar').classList.contains('active')) {
+                    renderGridCalendar();
+                    renderCalendarEvents(selectedCalDateStr);
+                }
             }
         }
 
@@ -723,8 +867,80 @@
             });
         }
 
-        function renderCalendarEvents() {
-            const selectedDate = document.getElementById('calendarPicker').value;
+        /* LOGIKA KALENDARZA */
+        function switchCalView(viewType, btn) {
+            document.querySelectorAll('.cal-toggle-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+
+            if (viewType === 'grid') {
+                document.getElementById('calViewGrid').style.display = 'block';
+                document.getElementById('calViewSingle').style.display = 'none';
+            } else {
+                document.getElementById('calViewGrid').style.display = 'none';
+                document.getElementById('calViewSingle').style.display = 'block';
+            }
+        }
+
+        function changeMonth(delta) {
+            currentCalDate.setMonth(currentCalDate.getMonth() + delta);
+            renderGridCalendar();
+        }
+
+        function renderGridCalendar() {
+            const container = document.getElementById('gridCalendarDaysContainer');
+            container.innerHTML = '';
+
+            const year = currentCalDate.getFullYear();
+            const month = currentCalDate.getMonth();
+
+            const monthNames = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"];
+            document.getElementById('currentMonthYear').innerText = `${monthNames[month]} ${year}`;
+
+            const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                container.innerHTML += `<div class="grid-day empty"></div>`;
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dayDate = new Date(year, month, day);
+                const dayStr = dayDate.toISOString().split('T')[0];
+
+                const matches = database.filter(item => 
+                    item.orderDate === dayStr || 
+                    item.measureDate === dayStr || 
+                    item.remindDate === dayStr
+                );
+
+                const isToday = dayStr === todayStr;
+                const isSelected = dayStr === selectedCalDateStr;
+
+                let dotsHtml = '';
+                if (matches.length > 0) {
+                    dotsHtml = '<div class="day-dots">';
+                    matches.slice(0, 3).forEach(m => {
+                        dotsHtml += `<div class="dot dot-${m.vat}"></div>`;
+                    });
+                    dotsHtml += '</div>';
+                }
+
+                const dayEl = document.createElement('div');
+                dayEl.className = `grid-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`;
+                dayEl.innerHTML = `<span>${day}</span>${dotsHtml}`;
+                dayEl.onclick = () => {
+                    selectedCalDateStr = dayStr;
+                    document.getElementById('calendarPicker').value = dayStr;
+                    renderGridCalendar();
+                    renderCalendarEvents(dayStr);
+                };
+
+                container.appendChild(dayEl);
+            }
+        }
+
+        function renderCalendarEvents(selectedDate) {
             const container = document.getElementById('calendarEventsContainer');
             container.innerHTML = '';
             const today = new Date().toISOString().split('T')[0];
@@ -736,7 +952,7 @@
             );
 
             if (matched.length === 0) {
-                container.innerHTML = `<p style="text-align:center; color: var(--text-muted); padding: 30px 0;">Brak zdarzeń dla wybranego dnia (${selectedDate}).</p>`;
+                container.innerHTML = `<p style="text-align:center; color: var(--text-muted); padding: 20px 0;">Brak zdarzeń dla wybranego dnia (${selectedDate}).</p>`;
                 return;
             }
 

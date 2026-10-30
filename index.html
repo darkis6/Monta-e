@@ -289,6 +289,7 @@
             background: #e2e8f0;
             border: none;
             border-radius: 6px;
+            cursor: pointer;
         }
 
         .filter-btn.active {
@@ -384,10 +385,10 @@
     <!-- EKRAN 2: LISTA -->
     <div id="section-list" class="section">
         <div class="filters">
-            <button class="filter-btn active" onclick="setFilter('all')">Wszyscy</button>
-            <button class="filter-btn" onclick="setFilter('8')">VAT 8%</button>
-            <button class="filter-btn" onclick="setFilter('23')">VAT 23%</button>
-            <button class="filter-btn" onclick="setFilter('pending')">Do sprawdzenia</button>
+            <button class="filter-btn active" onclick="setFilter('all', this)">Wszyscy</button>
+            <button class="filter-btn" onclick="setFilter('8', this)">VAT 8%</button>
+            <button class="filter-btn" onclick="setFilter('23', this)">VAT 23%</button>
+            <button class="filter-btn" onclick="setFilter('pending', this)">Do sprawdzenia</button>
         </div>
 
         <div id="clientsList"></div>
@@ -427,12 +428,14 @@
         let clients = JSON.parse(localStorage.getItem('vat_clients_data')) || [];
         let currentFilter = 'all';
 
-        function switchSection(sec, btn) {
+        function switchSection(sec, btnElement) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             
-            document.getElementById(`section-${sec}`).classList.add('active');
-            btn.classList.add('active');
+            document.getElementById('section-' + sec).classList.add('active');
+            if (btnElement) {
+                btnElement.classList.add('active');
+            }
 
             if (sec === 'list') {
                 renderClients();
@@ -482,7 +485,10 @@
 
             saveData();
             resetForm();
-            switchSection('list', document.querySelectorAll('.nav-item')[1]);
+            
+            // Przełącz na zakładkę listy programowo
+            const listNavBtn = document.querySelectorAll('.nav-item')[1];
+            switchSection('list', listNavBtn);
         });
 
         function saveData() {
@@ -515,7 +521,8 @@
             document.getElementById('submitBtn').innerText = 'Zapisz Zmiany';
             document.getElementById('cancelBtn').style.display = 'block';
 
-            switchSection('form', document.querySelectorAll('.nav-item')[0]);
+            const formNavBtn = document.querySelectorAll('.nav-item')[0];
+            switchSection('form', formNavBtn);
         }
 
         function toggleCheck(id) {
@@ -538,15 +545,18 @@
             }
         }
 
-        function setFilter(filter) {
+        function setFilter(filter, btnElement) {
             currentFilter = filter;
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            if (btnElement) {
+                btnElement.classList.add('active');
+            }
             renderClients();
         }
 
         function renderClients() {
             const listEl = document.getElementById('clientsList');
+            if (!listEl) return;
             listEl.innerHTML = '';
             const todayStr = new Date().toISOString().split('T')[0];
 
@@ -569,8 +579,11 @@
         }
 
         function renderCalendarView() {
-            const selectedDate = document.getElementById('calendarPicker').value;
+            const picker = document.getElementById('calendarPicker');
             const container = document.getElementById('calendarResults');
+            if (!picker || !container) return;
+
+            const selectedDate = picker.value;
             container.innerHTML = '';
 
             const todayStr = new Date().toISOString().split('T')[0];

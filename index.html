@@ -2,7 +2,6 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <link rel="manifest" href="manifest.json">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rejestr Klienci & Montaże VAT</title>
     <link rel="manifest" href="manifest.json">
@@ -141,7 +140,7 @@
             border-radius: 8px;
         }
 
-        /* Poprawiona Nawigacja Dolna */
+        /* Dolna nawigacja */
         .nav-bar {
             position: fixed;
             bottom: 0;
@@ -164,11 +163,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: #6b7280;
             cursor: pointer;
             flex: 1;
-            padding: 4px;
+            padding: 6px;
         }
 
         .nav-item.active {
@@ -177,7 +176,7 @@
         }
 
         .nav-icon {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             margin-bottom: 2px;
         }
 
@@ -278,33 +277,3 @@
 
         .btn-check { background: #dcfce7; color: #15803d; }
         .btn-edit { background: #e0f2fe; color: #0369a1; }
-        .btn-delete { background: #fee2e2; color: #b91c1c; }
-
-        .filters {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 12px;
-        }
-
-        .filter-btn {
-            flex: 1;
-            padding: 6px;
-            font-size: 0.75rem;
-            background: #e2e8f0;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .filter-btn.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .calendar-box {
-            text-align: center;
-            margin-bottom: 12px;
-        }
-        
-        .calendar-box input[type="date"] {
-            font-weight: bold

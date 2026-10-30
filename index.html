@@ -2,683 +2,572 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    HTML
-<link rel="manifest" href="manifest.json">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rejestr Montaży VAT</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        vat8: {
-                            DEFAULT: '#10b981',
-                            light: '#ecfdf5',
-                            dark: '#047857'
-                        },
-                        vat23: {
-                            DEFAULT: '#f59e0b',
-                            light: '#fffbeb',
-                            dark: '#b45309'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <title>Rejestr Klienów i Montaży VAT</title>
+    <link rel="manifest" href="manifest.json">
     <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --text: #1f2937;
+            --border: #e5e7eb;
+            --vat-8: #059669;
+            --vat-23: #d97706;
+            --status-wait: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
+            background-color: var(--bg-color);
+            color: var(--text);
+            padding: 12px;
+            max-width: 600px;
+            margin: 0 auto;
+            padding-bottom: 80px;
         }
-        /* Custom styling for sleek interactions */
-        .tab-btn.active {
-            color: #2563eb;
-            border-bottom-color: #2563eb;
+
+        header {
+            text-align: center;
+            margin-bottom: 16px;
         }
-        .animate-fade-in {
-            animation: fadeIn 0.25s ease-in-out;
+
+        h1 {
+            font-size: 1.3rem;
+            color: #1e293b;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        .card {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #4b5563;
+        }
+
+        input, select, textarea, button {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .radio-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .radio-label.vat8-label { color: var(--vat-8); }
+        .radio-label.vat23-label { color: var(--vat-23); }
+
+        .radio-label:has(input:checked) {
+            background-color: #f0fdf4;
+            border-color: var(--vat-8);
+        }
+
+        .radio-label.vat23-label:has(input:checked) {
+            background-color: #fffbeb;
+            border-color: var(--vat-23);
+        }
+
+        .radio-label input { display: none; }
+
+        .btn-submit {
+            background-color: var(--primary);
+            color: white;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .btn-cancel {
+            background-color: #6b7280;
+            color: white;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            margin-top: 8px;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        /* Nawigacja Dolna */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            max-width: 600px;
+            margin: 0 auto;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #6b7280;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+
+        /* Sekcje */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Karty Klientów */
+        .entry-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--border);
+        }
+
+        .entry-card.vat-8 { border-left-color: var(--vat-8); }
+        .entry-card.vat-23 { border-left-color: var(--vat-23); }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .client-name {
+            font-weight: bold;
+            font-size: 1.05rem;
+            color: #1e293b;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .badge-8 { background: #d1fae5; color: var(--vat-8); }
+        .badge-23 { background: #fef3c7; color: var(--vat-23); }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: #4b5563;
+            margin-top: 8px;
+            background: #f8fafc;
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .details-full {
+            grid-column: span 2;
+        }
+
+        .remind-box {
+            margin-top: 8px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            background: #fef2f2;
+            color: #991b1b;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .remind-box.ok {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .entry-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 6px;
+            font-size: 0.75rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-check { background: #dcfce7; color: #15803d; }
+        .btn-edit { background: #e0f2fe; color: #0369a1; }
+        .btn-delete { background: #fee2e2; color: #b91c1c; }
+
+        .filters {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .filter-btn {
+            flex: 1;
+            padding: 6px;
+            font-size: 0.75rem;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 6px;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col pb-20 md:pb-6">
+<body>
 
-    <!-- Header / Navbar -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div class="max-w-xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
-                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                </div>
-                <div>
-                    <h1 class="font-bold text-slate-900 text-lg leading-tight">Rejestr Montaży</h1>
-                    <p class="text-xs text-slate-500 font-medium">Monitoring VAT 8% i 23% (+5 tyg.)</p>
-                </div>
-            </div>
-            <button id="notifBtn" onclick="requestNotificationPermission()" class="hidden text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 font-semibold px-2.5 py-1.5 rounded-lg border border-amber-200 flex items-center space-x-1.5 transition">
-                <i class="fa-solid fa-bell"></i>
-                <span>Włącz powiadomienia</span>
-            </button>
-        </div>
-
-        <!-- Top Navigation Tabs (Desktop & Mobile view switcher) -->
-        <div class="max-w-xl mx-auto px-4 flex border-t border-slate-100 bg-slate-50/50">
-            <button id="tabNavForm" onclick="switchTab('form')" class="tab-btn active flex-1 py-3 text-center font-semibold text-sm border-b-2 border-blue-600 text-blue-600 flex items-center justify-center space-x-2 transition">
-                <i class="fa-solid fa-plus-circle"></i>
-                <span>Dodaj nowy</span>
-            </button>
-            <button id="tabNavList" onclick="switchTab('list')" class="tab-btn flex-1 py-3 text-center font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center justify-center space-x-2 transition">
-                <i class="fa-solid fa-list-check"></i>
-                <span>Lista montaży</span>
-                <span id="badgePendingCount" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
-            </button>
-        </div>
+    <header>
+        <h1 id="pageTitle">Rejestr Klienci & Montaże</h1>
     </header>
 
-    <!-- Main Container -->
-    <main class="max-w-xl w-full mx-auto px-4 py-5 flex-1">
+    <!-- EKRAN 1: FORMULARZ DANYCH KLIENTA -->
+    <div id="section-form" class="section active">
+        <div class="card">
+            <form id="clientForm">
+                <input type="hidden" id="editId" value="">
 
-        <!-- Toast Notification Container -->
-        <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-xl flex items-center space-x-2 transition-all duration-300 opacity-0 pointer-events-none translate-y-[-10px]">
-            <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
-            <span id="toastMsg">Operacja zakończona sukcesem</span>
+                <div class="form-group">
+                    <label>Imię i Nazwisko / Nazwa Klienta *</label>
+                    <input type="text" id="clientName" placeholder="np. Jan Kowalski" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Stawka VAT *</label>
+                    <div class="radio-group">
+                        <label class="radio-label vat8-label">
+                            <input type="radio" name="vatRate" value="8" checked> VAT 8%
+                        </label>
+                        <label class="radio-label vat23-label">
+                            <input type="radio" name="vatRate" value="23"> VAT 23%
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Adres zamieszkania / Montażu</label>
+                    <input type="text" id="address" placeholder="np. ul. Lipowa 12, Warszawa">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nr transakcji</label>
+                        <input type="text" id="transactionNo" placeholder="np. TR/102/2026">
+                    </div>
+                    <div class="form-group">
+                        <label>Nr umowy</label>
+                        <input type="text" id="contractNo" placeholder="np. UM/45/2026">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Data pomiaru</label>
+                        <input type="date" id="measureDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Data zamówienia *</label>
+                        <input type="date" id="orderDate" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Montażysta</label>
+                    <input type="text" id="fitter" placeholder="np. Pan Piotr / Ekipa 2">
+                </div>
+
+                <div class="form-group">
+                    <label>Dodatkowe uwagi</label>
+                    <textarea id="notes" rows="2" placeholder="Opcjonalne szczegóły..."></textarea>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn-submit">Zapisz Klienta (+Przypomnienie 5 tyg.)</button>
+                <button type="button" id="cancelBtn" class="btn-cancel" style="display:none;" onclick="resetForm()">Anuluj edycję</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- EKRAN 2: LISTA KLIENTÓW I MONTAŻY -->
+    <div id="section-list" class="section">
+        <div class="filters">
+            <button class="filter-btn active" onclick="setFilter('all')">Wszyscy</button>
+            <button class="filter-btn" onclick="setFilter('8')">VAT 8%</button>
+            <button class="filter-btn" onclick="setFilter('23')">VAT 23%</button>
+            <button class="filter-btn" onclick="setFilter('pending')">Do sprawdzenia</button>
         </div>
 
-        <!-- VIEW 1: DODAJ NOWY MONTAŻ (FORM) -->
-        <section id="viewForm" class="animate-fade-in space-y-4">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5">
-                <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
-                    <h2 class="text-base font-bold text-slate-900 flex items-center space-x-2">
-                        <i class="fa-solid fa-pen-to-square text-blue-600"></i>
-                        <span id="formTitleText">Formularz nowego montażu</span>
-                    </h2>
-                    <span id="cancelEditBtn" onclick="resetForm()" class="hidden text-xs text-rose-600 font-semibold cursor-pointer hover:underline">Anuluj edycję</span>
-                </div>
+        <div id="clientsList"></div>
+    </div>
 
-                <form id="montageForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
-                    <input type="hidden" id="editItemId" value="">
-
-                    <!-- Numer dokumentu / Klient / Opis -->
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5" for="docName">
-                            Dokument / Klient / Nr faktury <span class="text-rose-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                                <i class="fa-solid fa-user-tag text-sm"></i>
-                            </span>
-                            <input type="text" id="docName" required placeholder="np. FV 102/2026 - Pan Kowalski"
-                                class="w-full pl-9 pr-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                        </div>
-                    </div>
-
-                    <!-- Stawka VAT -->
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                            Stawka VAT <span class="text-rose-500">*</span>
-                        </label>
-                        <div class="grid grid-cols-2 gap-3">
-                            <label class="relative flex items-center justify-center p-3 border-2 border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50 has-[:checked]:text-emerald-800">
-                                <input type="radio" name="vatRate" value="8" checked onchange="updateVatStyle()" class="sr-only">
-                                <div class="text-center">
-                                    <div class="font-black text-lg text-emerald-600">VAT 8%</div>
-                                    <div class="text-[11px] text-slate-500 font-medium">Montaż z materiałem</div>
-                                </div>
-                            </label>
-
-                            <label class="relative flex items-center justify-center p-3 border-2 border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50/50 has-[:checked]:text-amber-800">
-                                <input type="radio" name="vatRate" value="23" onchange="updateVatStyle()" class="sr-only">
-                                <div class="text-center">
-                                    <div class="font-black text-lg text-amber-600">VAT 23%</div>
-                                    <div class="text-[11px] text-slate-500 font-medium">Usługa / Towar</div>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Data dokumentu -->
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5" for="docDate">
-                            Data wykonania dokumentu <span class="text-rose-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                                <i class="fa-regular fa-calendar-days text-sm"></i>
-                            </span>
-                            <input type="date" id="docDate" required onchange="calculateReminderDate()"
-                                class="w-full pl-9 pr-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                        </div>
-                    </div>
-
-                    <!-- Podgląd daty przypomnienia -->
-                    <div class="bg-blue-50/70 border border-blue-100 rounded-xl p-3.5 flex items-start space-x-3">
-                        <div class="p-2 bg-blue-100 text-blue-600 rounded-lg text-sm mt-0.5">
-                            <i class="fa-solid fa-clock-rotate-left"></i>
-                        </div>
-                        <div class="flex-1 text-xs">
-                            <span class="text-slate-500 block">Automatyczna data weryfikacji (+5 tygodni / 35 dni):</span>
-                            <span id="reminderPreviewDate" class="font-bold text-blue-900 text-sm">--</span>
-                            <p class="text-[11px] text-slate-500 mt-0.5">W tym dniu aplikacja wyznaczy sprawdzian wykonania zlecenia.</p>
-                        </div>
-                    </div>
-
-                    <!-- Uwagi / Notatki opcjonalne -->
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5" for="notes">
-                            Dodatkowe uwagi / Miejsce / Telefon (opcjonalnie)
-                        </label>
-                        <textarea id="notes" rows="2" placeholder="np. Miejscowość, numer telefonu do inwestora..."
-                            class="w-full p-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"></textarea>
-                    </div>
-
-                    <!-- Przycisk Zapisz -->
-                    <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-floppy-disk"></i>
-                        <span id="submitBtnText">Zapisz i ustaw przypomnienie</span>
-                    </button>
-                </form>
-            </div>
-        </section>
-
-        <!-- VIEW 2: LISTA MONTAŻY (LIST & DETAILS) -->
-        <section id="viewList" class="animate-fade-in space-y-4 hidden">
-
-            <!-- Podsumowanie liczników -->
-            <div class="grid grid-cols-3 gap-2 text-center">
-                <div class="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-sm">
-                    <span class="block text-[11px] font-semibold text-slate-400 uppercase">Łącznie</span>
-                    <span id="statTotal" class="text-lg font-bold text-slate-800">0</span>
-                </div>
-                <div class="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-sm">
-                    <span class="block text-[11px] font-semibold text-slate-400 uppercase">Do sprawdz.</span>
-                    <span id="statPending" class="text-lg font-bold text-amber-600">0</span>
-                </div>
-                <div class="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-sm">
-                    <span class="block text-[11px] font-semibold text-slate-400 uppercase">Wymaga reakcji</span>
-                    <span id="statOverdue" class="text-lg font-bold text-rose-600">0</span>
-                </div>
-            </div>
-
-            <!-- Wyszukiwarka -->
-            <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                    <i class="fa-solid fa-magnifying-glass text-sm"></i>
-                </span>
-                <input type="text" id="searchInput" oninput="renderList()" placeholder="Szukaj klienta, dokumentu, uwag..."
-                    class="w-full pl-9 pr-8 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition">
-                <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
-                    <i class="fa-solid fa-circle-xmark text-sm"></i>
-                </button>
-            </div>
-
-            <!-- Filtry stawki VAT i statusu -->
-            <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 scrollbar-none text-xs font-semibold">
-                <button onclick="setFilter('all')" class="filter-btn active-filter px-3 py-1.5 rounded-lg border bg-blue-600 text-white border-blue-600 transition whitespace-nowrap" data-filter="all">Wszystkie</button>
-                <button onclick="setFilter('pending')" class="filter-btn px-3 py-1.5 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 transition whitespace-nowrap" data-filter="pending">Do sprawdzenia</button>
-                <button onclick="setFilter('overdue')" class="filter-btn px-3 py-1.5 rounded-lg border bg-white text-rose-600 border-slate-200 hover:bg-rose-50 transition whitespace-nowrap" data-filter="overdue">⚠️ Wymagające</button>
-                <button onclick="setFilter('8')" class="filter-btn px-3 py-1.5 rounded-lg border bg-white text-emerald-700 border-slate-200 hover:bg-emerald-50 transition whitespace-nowrap" data-filter="8">VAT 8%</button>
-                <button onclick="setFilter('23')" class="filter-btn px-3 py-1.5 rounded-lg border bg-white text-amber-700 border-slate-200 hover:bg-amber-50 transition whitespace-nowrap" data-filter="23">VAT 23%</button>
-                <button onclick="setFilter('completed')" class="filter-btn px-3 py-1.5 rounded-lg border bg-white text-slate-500 border-slate-200 hover:bg-slate-50 transition whitespace-nowrap" data-filter="completed">Sprawdzone</button>
-            </div>
-
-            <!-- Lista Kart Montaży -->
-            <div id="entriesList" class="space-y-3">
-                <!-- Generowane dynamicznie -->
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Dolna nawigacja dla urządzeń mobilnych -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 py-2 px-6 flex justify-around items-center z-40 md:hidden shadow-lg">
-        <button onclick="switchTab('form')" id="mobileNavForm" class="flex flex-col items-center text-blue-600 space-y-1">
-            <i class="fa-solid fa-square-plus text-xl"></i>
-            <span class="text-[10px] font-semibold">Dodaj nowy</span>
+    <!-- DOLNE MENU NAWIGACYJNE -->
+    <nav class="nav-bar">
+        <button class="nav-item active" onclick="switchSection('form', this)">
+            <span class="nav-icon">➕</span>
+            <span>Nowy Klient</span>
         </button>
-        <button onclick="switchTab('list')" id="mobileNavList" class="flex flex-col items-center text-slate-400 space-y-1 relative">
-            <i class="fa-solid fa-list-check text-xl"></i>
-            <span class="text-[10px] font-semibold">Lista</span>
-            <span id="mobileBadgePending" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
+        <button class="nav-item" onclick="switchSection('list', this)">
+            <span class="nav-icon">📋</span>
+            <span>Lista Klientów</span>
         </button>
     </nav>
 
-    <!-- JavaScript Application Logic -->
     <script>
-        // Key constants & State initialization
-        const STORAGE_KEY = 'vat_montages_data_v2';
-        let montages = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        document.getElementById('orderDate').valueAsDate = new Date();
+
+        let clients = JSON.parse(localStorage.getItem('vat_clients_data')) || [];
         let currentFilter = 'all';
-        let currentTab = 'form';
 
-        // Initialize App on DOM Load
-        document.addEventListener('DOMContentLoaded', () => {
-            // Set default date input to today
-            document.getElementById('docDate').valueAsDate = new Date();
-            calculateReminderDate();
-            checkNotificationStatus();
-            renderList();
-            updateBadgesAndStats();
-        });
+        function switchSection(sec, btn) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`section-${sec}`).classList.add('active');
+            btn.classList.add('active');
 
-        // Tab Switching Logic
-        function switchTab(tab) {
-            currentTab = tab;
-            const viewForm = document.getElementById('viewForm');
-            const viewList = document.getElementById('viewList');
-            const tabNavForm = document.getElementById('tabNavForm');
-            const tabNavList = document.getElementById('tabNavList');
-            const mobileNavForm = document.getElementById('mobileNavForm');
-            const mobileNavList = document.getElementById('mobileNavList');
-
-            if (tab === 'form') {
-                viewForm.classList.remove('hidden');
-                viewList.classList.add('hidden');
-                
-                tabNavForm.classList.add('text-blue-600', 'border-blue-600');
-                tabNavForm.classList.remove('text-slate-500', 'border-transparent');
-                
-                tabNavList.classList.remove('text-blue-600', 'border-blue-600');
-                tabNavList.classList.add('text-slate-500', 'border-transparent');
-
-                mobileNavForm.className = "flex flex-col items-center text-blue-600 space-y-1";
-                mobileNavList.className = "flex flex-col items-center text-slate-400 space-y-1 relative";
-            } else {
-                viewForm.classList.add('hidden');
-                viewList.classList.remove('hidden');
-
-                tabNavList.classList.add('text-blue-600', 'border-blue-600');
-                tabNavList.classList.remove('text-slate-500', 'border-transparent');
-                
-                tabNavForm.classList.remove('text-blue-600', 'border-blue-600');
-                tabNavForm.classList.add('text-slate-500', 'border-transparent');
-
-                mobileNavList.className = "flex flex-col items-center text-blue-600 space-y-1 relative";
-                mobileNavForm.className = "flex flex-col items-center text-slate-400 space-y-1";
-
-                renderList();
+            if (sec === 'list') {
+                renderClients();
             }
         }
 
-        // Automatic Calculation of +5 Weeks (+35 Days) Date
-        function calculateReminderDate() {
-            const dateInput = document.getElementById('docDate').value;
-            const previewEl = document.getElementById('reminderPreviewDate');
-
-            if (!dateInput) {
-                previewEl.innerText = '--';
-                return;
-            }
-
-            const docDate = new Date(dateInput);
-            const reminderDate = new Date(docDate);
-            reminderDate.setDate(reminderDate.getDate() + 35); // +35 days = 5 weeks
-
-            const formattedDate = formatDatePolish(reminderDate);
-            previewEl.innerText = `${reminderDate.toISOString().split('T')[0]} (${formattedDate})`;
-        }
-
-        // Format Date nicely in Polish
-        function formatDatePolish(dateObj) {
-            return dateObj.toLocaleDateString('pl-PL', {
-                weekday: 'short',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-        }
-
-        // Form Submission Handler (Create & Update)
-        function handleFormSubmit(e) {
+        document.getElementById('clientForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const docName = document.getElementById('docName').value.trim();
+            const editId = document.getElementById('editId').value;
+            const clientName = document.getElementById('clientName').value;
             const vatRate = document.querySelector('input[name="vatRate"]:checked').value;
-            const docDateVal = document.getElementById('docDate').value;
-            const notes = document.getElementById('notes').value.trim();
-            const editId = document.getElementById('editItemId').value;
+            const address = document.getElementById('address').value;
+            const transactionNo = document.getElementById('transactionNo').value;
+            const contractNo = document.getElementById('contractNo').value;
+            const measureDate = document.getElementById('measureDate').value;
+            const orderDateVal = document.getElementById('orderDate').value;
+            const fitter = document.getElementById('fitter').value;
+            const notes = document.getElementById('notes').value;
 
-            // Calculate exact +35 days reminder
-            const docDate = new Date(docDateVal);
-            const remindDate = new Date(docDate);
+            // Obliczenie daty przypomnienia (+35 dni od daty zamówienia)
+            const orderDate = new Date(orderDateVal);
+            const remindDate = new Date(orderDate);
             remindDate.setDate(remindDate.getDate() + 35);
-            const remindDateStr = remindDate.toISOString().split('T')[0];
+
+            const clientData = {
+                id: editId ? Number(editId) : Date.now(),
+                clientName,
+                vatRate,
+                address,
+                transactionNo,
+                contractNo,
+                measureDate,
+                orderDate: orderDateVal,
+                remindDate: remindDate.toISOString().split('T')[0],
+                fitter,
+                notes,
+                checked: editId ? (clients.find(c => c.id == editId)?.checked || false) : false
+            };
 
             if (editId) {
-                // Edit existing entry
-                montages = montages.map(item => item.id == editId ? {
-                    ...item,
-                    docName,
-                    vatRate,
-                    docDate: docDateVal,
-                    remindDate: remindDateStr,
-                    notes,
-                    updatedAt: new Date().toISOString()
-                } : item);
-
-                showToast('Zaktualizowano dane montażu!');
+                clients = clients.map(c => c.id === Number(editId) ? clientData : c);
             } else {
-                // Add new entry
-                const newItem = {
-                    id: Date.now(),
-                    docName,
-                    vatRate,
-                    docDate: docDateVal,
-                    remindDate: remindDateStr,
-                    notes,
-                    checked: false,
-                    createdAt: new Date().toISOString()
-                };
-                montages.unshift(newItem);
-                showToast('Dodano dokument i ustawiono przypomnienie!');
+                clients.unshift(clientData);
             }
 
             saveData();
             resetForm();
-            switchTab('list');
-        }
+            switchSection('list', document.querySelectorAll('.nav-item')[1]);
+        });
 
-        // Save to LocalStorage
         function saveData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(montages));
-            updateBadgesAndStats();
-            checkAndTriggerNotifications();
+            localStorage.setItem('vat_clients_data', JSON.stringify(clients));
         }
 
-        // Reset Form Fields
         function resetForm() {
-            document.getElementById('montageForm').reset();
-            document.getElementById('editItemId').value = '';
-            document.getElementById('docDate').valueAsDate = new Date();
-            document.getElementById('formTitleText').innerText = 'Formularz nowego montażu';
-            document.getElementById('submitBtnText').innerText = 'Zapisz i ustaw przypomnienie';
-            document.getElementById('cancelEditBtn').classList.add('hidden');
-            calculateReminderDate();
+            document.getElementById('clientForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('submitBtn').innerText = 'Zapisz Klienta (+Przypomnienie 5 tyg.)';
+            document.getElementById('cancelBtn').style.display = 'none';
+            document.getElementById('orderDate').valueAsDate = new Date();
         }
 
-        // Populate Form for Editing
-        function editEntry(id) {
-            const item = montages.find(i => i.id === id);
+        function editClient(id) {
+            const item = clients.find(c => c.id === id);
             if (!item) return;
 
-            document.getElementById('editItemId').value = item.id;
-            document.getElementById('docName').value = item.docName;
-            document.getElementById('docDate').value = item.docDate;
+            document.getElementById('editId').value = item.id;
+            document.getElementById('clientName').value = item.clientName;
+            document.querySelector(`input[name="vatRate"][value="${item.vatRate}"]`).checked = true;
+            document.getElementById('address').value = item.address || '';
+            document.getElementById('transactionNo').value = item.transactionNo || '';
+            document.getElementById('contractNo').value = item.contractNo || '';
+            document.getElementById('measureDate').value = item.measureDate || '';
+            document.getElementById('orderDate').value = item.orderDate || '';
+            document.getElementById('fitter').value = item.fitter || '';
             document.getElementById('notes').value = item.notes || '';
 
-            // Set VAT Radio Button
-            const vatRadios = document.querySelectorAll('input[name="vatRate"]');
-            vatRadios.forEach(r => {
-                r.checked = (r.value === item.vatRate);
-            });
+            document.getElementById('submitBtn').innerText = 'Zapisz Zmiany';
+            document.getElementById('cancelBtn').style.display = 'block';
 
-            document.getElementById('formTitleText').innerText = 'Edycja wpisu montażu';
-            document.getElementById('submitBtnText').innerText = 'Zapisz zmiany';
-            document.getElementById('cancelEditBtn').classList.remove('hidden');
-
-            calculateReminderDate();
-            switchTab('form');
+            switchSection('form', document.querySelectorAll('.nav-item')[0]);
         }
 
-        // Toggle Done / Checked Status
         function toggleCheck(id) {
-            montages = montages.map(item => item.id === id ? { ...item, checked: !item.checked } : item);
+            clients = clients.map(c => c.id === id ? {...c, checked: !c.checked} : c);
             saveData();
-            renderList();
-            showToast('Zmieniono status weryfikacji');
+            renderClients();
         }
 
-        // Delete Item
-        function deleteEntry(id) {
-            if (confirm('Czy na pewno chcesz usunąć ten montaż z rejestru?')) {
-                montages = montages.filter(item => item.id !== id);
+        function deleteClient(id) {
+            if (confirm("Czy na pewno chcesz usunąć dane tego klienta?")) {
+                clients = clients.filter(c => c.id !== id);
                 saveData();
-                renderList();
-                showToast('Usunięto pozycję', 'delete');
+                renderClients();
             }
         }
 
-        // Filter Controller
         function setFilter(filter) {
             currentFilter = filter;
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                if (btn.dataset.filter === filter) {
-                    btn.className = "filter-btn active-filter px-3 py-1.5 rounded-lg border bg-blue-600 text-white border-blue-600 transition whitespace-nowrap";
-                } else {
-                    btn.className = "filter-btn px-3 py-1.5 rounded-lg border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 transition whitespace-nowrap";
-                }
-            });
-            renderList();
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderClients();
         }
 
-        // Clear Search Bar
-        function clearSearch() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('clearSearchBtn').classList.add('hidden');
-            renderList();
-        }
-
-        // Main Render Function for View 2 (List)
-        function renderList() {
-            const listContainer = document.getElementById('entriesList');
-            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
-            const clearSearchBtn = document.getElementById('clearSearchBtn');
-
-            if (searchQuery.length > 0) {
-                clearSearchBtn.classList.remove('hidden');
-            } else {
-                clearSearchBtn.classList.add('hidden');
-            }
+        function renderClients() {
+            const listEl = document.getElementById('clientsList');
+            listEl.innerHTML = '';
 
             const todayStr = new Date().toISOString().split('T')[0];
 
-            // Filter logic
-            const filtered = montages.filter(item => {
-                // Search matching
-                const matchesSearch = item.docName.toLowerCase().includes(searchQuery) ||
-                                      (item.notes && item.notes.toLowerCase().includes(searchQuery)) ||
-                                      item.docDate.includes(searchQuery);
-
-                if (!matchesSearch) return false;
-
-                const isOverdue = !item.checked && item.remindDate <= todayStr;
-
+            const filtered = clients.filter(item => {
                 if (currentFilter === '8') return item.vatRate === '8';
                 if (currentFilter === '23') return item.vatRate === '23';
                 if (currentFilter === 'pending') return !item.checked;
-                if (currentFilter === 'completed') return item.checked;
-                if (currentFilter === 'overdue') return isOverdue;
-
                 return true;
             });
 
-            listContainer.innerHTML = '';
-
             if (filtered.length === 0) {
-                listContainer.innerHTML = `
-                    <div class="text-center py-10 bg-white rounded-2xl border border-slate-200/80 p-6">
-                        <i class="fa-regular fa-folder-open text-4xl text-slate-300 mb-2"></i>
-                        <p class="text-slate-600 font-medium text-sm">Brak wpisów spełniających kryteria.</p>
-                        <p class="text-slate-400 text-xs mt-1">Zmień filtr lub dodaj nowy montaż w formularzu.</p>
-                    </div>
-                `;
+                listEl.innerHTML = '<p style="text-align:center; color:#9ca3af; padding: 20px;">Brak wpisów.</p>';
                 return;
             }
 
             filtered.forEach(item => {
-                const isOverdue = !item.checked && item.remindDate <= todayStr;
-                const isToday = !item.checked && item.remindDate === todayStr;
-
                 const card = document.createElement('div');
-                
-                // Border styling depending on VAT & Status
-                let borderClass = item.vatRate === '8' ? 'border-l-4 border-l-emerald-500' : 'border-l-4 border-l-amber-500';
-                if (item.checked) borderClass = 'border-l-4 border-l-slate-300 opacity-75';
+                card.className = `entry-card vat-${item.vatRate}`;
 
-                card.className = `bg-white rounded-xl shadow-sm border border-slate-200 p-4 transition hover:shadow-md ${borderClass}`;
+                const isDue = !item.checked && item.remindDate <= todayStr;
 
                 card.innerHTML = `
-                    <div class="flex items-start justify-between gap-2 mb-2">
-                        <div>
-                            <div class="flex items-center space-x-2">
-                                <h3 class="font-bold text-slate-900 text-base leading-snug ${item.checked ? 'line-through text-slate-500' : ''}">
-                                    ${escapeHtml(item.docName)}
-                                </h3>
-                            </div>
-                            <p class="text-xs text-slate-400 font-medium mt-0.5">
-                                Utworzono: ${item.docDate}
-                            </p>
-                        </div>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-black ${item.vatRate === '8' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
-                            VAT ${item.vatRate}%
-                        </span>
+                    <div class="entry-header">
+                        <span class="client-name">${item.clientName}</span>
+                        <span class="badge badge-${item.vatRate}">VAT ${item.vatRate}%</span>
                     </div>
 
-                    <!-- Details & Dates -->
-                    <div class="bg-slate-50 rounded-lg p-2.5 my-2.5 text-xs space-y-1">
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500">Termin weryfikacji (+5 tyg.):</span>
-                            <span class="font-bold ${isOverdue ? 'text-rose-600 flex items-center space-x-1 animate-pulse' : 'text-slate-700'}">
-                                ${isOverdue ? '<i class="fa-solid fa-triangle-exclamation"></i>' : ''}
-                                <span>${item.remindDate}</span>
-                            </span>
-                        </div>
-
-                        ${isOverdue ? `
-                            <div class="text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded p-1 text-center mt-1">
-                                ⚠️ ${isToday ? 'DZIŚ MIJA 5 TYGODNI! SPRAWDŹ MONTAŻ' : 'TERMIN PRZEKROCZONY! SPRAWDŹ MONTAŻ'}
-                            </div>
-                        ` : ''}
-
-                        ${item.notes ? `
-                            <div class="pt-1 mt-1 border-t border-slate-200 text-slate-600 italic">
-                                <i class="fa-regular fa-comment-dots mr-1"></i>${escapeHtml(item.notes)}
-                            </div>
-                        ` : ''}
+                    <div class="details-grid">
+                        ${item.address ? `<div class="details-full">📍 <strong>Adres:</strong> ${item.address}</div>` : ''}
+                        ${item.transactionNo ? `<div>🔢 <strong>Nr transakcji:</strong> ${item.transactionNo}</div>` : ''}
+                        ${item.contractNo ? `<div>📄 <strong>Nr umowy:</strong> ${item.contractNo}</div>` : ''}
+                        ${item.measureDate ? `<div>📐 <strong>Pomiar:</strong> ${item.measureDate}</div>` : ''}
+                        <div>📅 <strong>Zamówienie:</strong> ${item.orderDate}</div>
+                        ${item.fitter ? `<div class="details-full">👷 <strong>Montażysta:</strong> ${item.fitter}</div>` : ''}
+                        ${item.notes ? `<div class="details-full">📝 <strong>Uwagi:</strong> ${item.notes}</div>` : ''}
                     </div>
 
-                    <!-- Actions Bar -->
-                    <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                        <button onclick="toggleCheck(${item.id})" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-semibold transition ${item.checked ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">
-                            <i class="fa-solid ${item.checked ? 'fa-rotate-left' : 'fa-circle-check'}"></i>
-                            <span>${item.checked ? 'Oznacz jako nie-sprawdzone' : 'Oznacz jako sprawdzone'}</span>
+                    <div class="remind-box ${item.checked ? 'ok' : (isDue ? '' : 'ok')}">
+                        <span>⏰ Przypomnienie (5 tyg.): <strong>${item.remindDate}</strong></span>
+                        <span>${item.checked ? '✓ Gotowe' : (isDue ? '⚠️ SPRAWDŹ!' : 'W trakcie')}</span>
+                    </div>
+
+                    <div class="entry-actions">
+                        <button class="action-btn btn-check" onclick="toggleCheck(${item.id})">
+                            ${item.checked ? '✓ Sprawdzone' : '◯ Odhacz'}
                         </button>
-
-                        <div class="flex items-center space-x-1">
-                            <button onclick="editEntry(${item.id})" title="Edytuj" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-slate-100 transition">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                            <button onclick="deleteEntry(${item.id})" title="Usuń" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-slate-100 transition">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
+                        <button class="action-btn btn-edit" onclick="editClient(${item.id})">Edytuj</button>
+                        <button class="action-btn btn-delete" onclick="deleteClient(${item.id})">Usuń</button>
                     </div>
                 `;
-
-                listContainer.appendChild(card);
+                listEl.appendChild(card);
             });
         }
 
-        // Update Counter Stats and Badges
-        function updateBadgesAndStats() {
-            const todayStr = new Date().toISOString().split('T')[0];
-
-            const total = montages.length;
-            const pending = montages.filter(i => !i.checked).length;
-            const overdue = montages.filter(i => !i.checked && i.remindDate <= todayStr).length;
-
-            document.getElementById('statTotal').innerText = total;
-            document.getElementById('statPending').innerText = pending;
-            document.getElementById('statOverdue').innerText = overdue;
-
-            const badgeNav = document.getElementById('badgePendingCount');
-            const mobileBadge = document.getElementById('mobileBadgePending');
-
-            if (pending > 0) {
-                badgeNav.innerText = pending;
-                badgeNav.classList.remove('hidden');
-                mobileBadge.innerText = pending;
-                mobileBadge.classList.remove('hidden');
-            } else {
-                badgeNav.classList.add('hidden');
-                mobileBadge.classList.add('hidden');
-            }
-        }
-
-        // Push Notifications Controller
-        function checkNotificationStatus() {
-            if ("Notification" in window) {
-                if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-                    document.getElementById('notifBtn').classList.remove('hidden');
-                }
-            }
-        }
-
-        function requestNotificationPermission() {
-            if ("Notification" in window) {
-                Notification.requestPermission().then(permission => {
-                    if (permission === "granted") {
-                        document.getElementById('notifBtn').classList.add('hidden');
-                        showToast("Powiadomienia włączone!");
-                        checkAndTriggerNotifications();
-                    }
-                });
-            }
-        }
-
-        function checkAndTriggerNotifications() {
-            if ("Notification" in window && Notification.permission === "granted") {
-                const todayStr = new Date().toISOString().split('T')[0];
-                const dueTodayItems = montages.filter(i => !i.checked && i.remindDate === todayStr);
-
-                dueTodayItems.forEach(item => {
-                    new Notification("Przypomnienie o montażu! (VAT " + item.vatRate + "%)", {
-                        body: `Minęło 5 tygodni od dokumentu: ${item.docName}. Sprawdź, czy wszystko zostało zrealizowane.`,
-                        icon: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
-                    });
-                });
-            }
-        }
-
-        // Toast Feedback Message
-        function showToast(msg, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toastMsg');
-            const toastIcon = document.getElementById('toastIcon');
-
-            toastMsg.innerText = msg;
-
-            if (type === 'delete') {
-                toastIcon.className = "fa-solid fa-trash-can text-rose-400";
-            } else {
-                toastIcon.className = "fa-solid fa-circle-check text-emerald-400";
-            }
-
-            toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-[-10px]');
-            toast.classList.add('opacity-100', 'translate-y-0');
-
-            setTimeout(() => {
-                toast.classList.remove('opacity-100', 'translate-y-0');
-                toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-[-10px]');
-            }, 2500);
-        }
-
-        // Helper to prevent XSS
-        function escapeHtml(str) {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
+        renderClients();
     </script>
 </body>
 </html>

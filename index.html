@@ -136,9 +136,72 @@
             transition: all 0.2s;
         }
 
-        input:focus, textarea:focus {
+        input:focus, select:focus, textarea:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        /* ZARZĄDZANIE LISTĄ RODZAJÓW MONTAŻU */
+        .assembly-manager {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 6px;
+        }
+
+        .assembly-list-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .assembly-tag {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-main);
+        }
+
+        .assembly-tag button {
+            background: none;
+            border: none;
+            color: var(--alert-text);
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8rem;
+            padding: 0;
+            width: auto;
+        }
+
+        .inline-add-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .inline-add-row input {
+            padding: 8px 10px;
+            font-size: 0.85rem;
+        }
+
+        .btn-small {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
         }
 
         /* WYBÓR VAT */
@@ -557,6 +620,23 @@
                 </div>
 
                 <div class="form-group">
+                    <label>Rodzaj montażu</label>
+                    <select id="assemblyType">
+                        <!-- Wypełniane dynamicznie -->
+                    </select>
+                    
+                    <!-- Panel zarządzania listą rodzajów montażu -->
+                    <div class="assembly-manager">
+                        <label style="font-size: 0.7rem; margin-bottom: 4px;">Zarządzaj rodzajami:</label>
+                        <div id="assemblyTagsList" class="assembly-list-items"></div>
+                        <div class="inline-add-row">
+                            <input type="text" id="newAssemblyInput" placeholder="Nowy rodzaj...">
+                            <button type="button" class="btn-small" onclick="addNewAssemblyType()">Dodaj</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label>Adres montażu</label>
                     <input type="text" id="address" placeholder="Ulica, numer, miasto">
                 </div>
@@ -620,6 +700,7 @@
                         <th>Status</th>
                         <th>Klient</th>
                         <th>VAT</th>
+                        <th>Rodzaj montażu</th>
                         <th>Adres</th>
                         <th>Transakcja</th>
                         <th>Umowa</th>
@@ -692,7 +773,7 @@
     </nav>
 
     <script>
-        // Inicjalizacja trybu ciemnego z pamięci
+        // Inicjalizacja trybu ciemnego
         const savedTheme = localStorage.getItem('app_theme') || 'light';
         document.body.setAttribute('data-theme', savedTheme);
         updateThemeButton(savedTheme);
@@ -721,6 +802,7 @@
         document.getElementById('calendarPicker').valueAsDate = new Date();
 
         let database = JSON.parse(localStorage.getItem('app_clients_db')) || [];
+        let assemblyTypes = JSON.parse(localStorage.getItem('app_assembly_types')) || ['Okna', 'Drzwi', 'Rolety', 'Bramy', 'Żaluzje'];
         let activeFilter = 'all';
 
         let currentCalDate = new Date();
@@ -728,7 +810,66 @@
 
         function saveToStorage() {
             localStorage.setItem('app_clients_db', JSON.stringify(database));
+            localStorage.setItem('app_assembly_types', JSON.stringify(assemblyTypes));
         }
+
+        function renderAssemblyDropdownAndManager() {
+            const selectEl = document.getElementById('assemblyType');
+            const tagsContainer = document.getElementById('assemblyTagsList');
+            
+            const currentVal = selectEl.value;
+            selectEl.innerHTML = '';
+            tagsContainer.innerHTML = '';
+
+            assemblyTypes.forEach(type => {
+                // Opcja do selecta
+                const opt = document.createElement('option');
+                opt.value = type;
+                opt.innerText = type;
+                selectEl.appendChild(opt);
+
+                // Tag do zarządzania w formularzu
+                const tag = document.createElement('div');
+                tag.className = 'assembly-tag';
+                tag.innerHTML = `<span>${type}</span> <button type="button" onclick="removeAssemblyType('${type}')">&times;</button>`;
+                tagsContainer.appendChild(tag);
+            });
+
+            if (assemblyTypes.includes(currentVal)) {
+                selectEl.value = currentVal;
+            }
+        }
+
+        function addNewAssemblyType() {
+            const input = document.getElementById('newAssemblyInput');
+            const val = input.value.trim();
+            if (!val) return;
+
+            if (assemblyTypes.includes(val)) {
+                alert('Taki rodzaj montażu już istnieje!');
+                return;
+            }
+
+            assemblyTypes.push(val);
+            saveToStorage();
+            renderAssemblyDropdownAndManager();
+            input.value = '';
+            selectEl.value = val;
+        }
+
+        function removeAssemblyType(type) {
+            if (assemblyTypes.length <= 1) {
+                alert('Musisz zostawić przynajmniej jeden rodzaj montażu.');
+                return;
+            }
+            if (confirm(`Usunąć rodzaj "${type}"?`)) {
+                assemblyTypes = assemblyTypes.filter(t => t !== type);
+                saveToStorage();
+                renderAssemblyDropdownAndManager();
+            }
+        }
+
+        renderAssemblyDropdownAndManager();
 
         function showTab(tabName, btn) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -753,6 +894,7 @@
             const editId = document.getElementById('editId').value;
             const clientName = document.getElementById('clientName').value;
             const vat = document.querySelector('input[name="vat"]:checked').value;
+            const assemblyType = document.getElementById('assemblyType').value;
             const address = document.getElementById('address').value;
             const transNo = document.getElementById('transNo').value;
             const contractNo = document.getElementById('contractNo').value;
@@ -770,6 +912,7 @@
                 id: editId ? Number(editId) : Date.now(),
                 clientName,
                 vat,
+                assemblyType,
                 address,
                 transNo,
                 contractNo,
@@ -798,6 +941,7 @@
             document.getElementById('saveBtn').innerText = 'Zapisz Klienta';
             document.getElementById('cancelBtn').style.display = 'none';
             document.getElementById('orderDate').valueAsDate = new Date();
+            renderAssemblyDropdownAndManager();
         }
 
         function editRecord(id) {
@@ -807,6 +951,7 @@
             document.getElementById('editId').value = item.id;
             document.getElementById('clientName').value = item.clientName;
             document.querySelector(`input[name="vat"][value="${item.vat}"]`).checked = true;
+            document.getElementById('assemblyType').value = item.assemblyType || assemblyTypes[0];
             document.getElementById('address').value = item.address || '';
             document.getElementById('transNo').value = item.transNo || '';
             document.getElementById('contractNo').value = item.contractNo || '';
@@ -862,6 +1007,7 @@
                     </div>
 
                     <div class="info-grid">
+                        ${item.assemblyType ? `<div class="full-width">🛠️ <strong>Rodzaj montażu:</strong> ${item.assemblyType}</div>` : ''}
                         ${item.address ? `<div class="full-width">📍 <strong>Adres:</strong> ${item.address}</div>` : ''}
                         ${item.transNo ? `<div>🔢 <strong>Transakcja:</strong> ${item.transNo}</div>` : ''}
                         ${item.contractNo ? `<div>📄 <strong>Umowa:</strong> ${item.contractNo}</div>` : ''}
@@ -915,7 +1061,7 @@
             const today = new Date().toISOString().split('T')[0];
 
             if (database.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color: var(--text-muted); padding: 20px;">Brak danych w tabeli.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color: var(--text-muted); padding: 20px;">Brak danych w tabeli.</td></tr>`;
                 return;
             }
 
@@ -926,6 +1072,7 @@
                     <td><span style="font-weight:bold; color:${item.done ? 'var(--vat8-color)' : (isOverdue ? 'var(--alert-text)' : 'var(--vat23-color)')}">${item.done ? '✓ Gotowe' : (isOverdue ? '⚠️ PILNE' : 'W trakcie')}</span></td>
                     <td style="font-weight:bold;">${item.clientName}</td>
                     <td><span class="badge badge-${item.vat}">VAT ${item.vat}%</span></td>
+                    <td>${item.assemblyType || '-'}</td>
                     <td>${item.address || '-'}</td>
                     <td>${item.transNo || '-'}</td>
                     <td>${item.contractNo || '-'}</td>

@@ -31,10 +31,17 @@
         body {
             background-color: var(--bg);
             color: var(--text-main);
-            padding: 16px;
-            max-width: 500px;
+            padding: 12px;
+            max-width: 100%;
             margin: 0 auto;
             padding-bottom: 80px;
+        }
+
+        @media (min-width: 600px) {
+            body {
+                max-width: 600px;
+                padding: 16px;
+            }
         }
 
         header {
@@ -252,6 +259,43 @@
         .act-edit { background: #e0f2fe; color: #075985; }
         .act-del { background: #fee2e2; color: #991b1b; }
 
+        /* WIDOK TABELI EXCEL */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        .excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .excel-table th {
+            background: #f1f5f9;
+            color: var(--text-muted);
+            padding: 10px 12px;
+            font-weight: 700;
+            border-bottom: 2px solid var(--border);
+            text-transform: uppercase;
+        }
+
+        .excel-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .excel-table tr:hover td {
+            background: #f8fafc;
+        }
+
         /* DOLNE MENU NAWIGACJI (3 PRZYCISKI) */
         .bottom-nav {
             position: fixed;
@@ -263,7 +307,7 @@
             display: flex;
             justify-content: space-around;
             align-items: center;
-            max-width: 500px;
+            max-width: 600px;
             margin: 0 auto;
             height: 60px;
             z-index: 100;
@@ -316,18 +360,6 @@
             background: var(--primary);
             color: white;
             border-color: var(--primary);
-        }
-
-        /* STYL DLA WYBORU W KALENDARZU */
-        .calendar-picker-card {
-            text-align: center;
-        }
-
-        .calendar-picker-card input[type="date"] {
-            font-weight: bold;
-            text-align: center;
-            font-size: 1rem;
-            background: #ffffff;
         }
     </style>
 </head>
@@ -415,16 +447,31 @@
         <div id="cardsContainer"></div>
     </div>
 
-    <!-- ZAKŁADKA 3: KALENDARZ -->
-    <div id="tab-calendar" class="tab-content">
-        <div class="card calendar-picker-card">
-            <div class="form-group" style="margin-bottom:0;">
-                <label>Wybierz dzień z kalendarza:</label>
-                <input type="date" id="calendarPicker" onchange="renderCalendarEvents()">
-            </div>
+    <!-- ZAKŁADKA 3: TABELA EXCEL -->
+    <div id="tab-excel" class="tab-content">
+        <div class="table-responsive">
+            <table class="excel-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Klient</th>
+                        <th>VAT</th>
+                        <th>Adres</th>
+                        <th>Transakcja</th>
+                        <th>Umowa</th>
+                        <th>Pomiar</th>
+                        <th>Zamówienie</th>
+                        <th>Weryfikacja (5tyg.)</th>
+                        <th>Montażysta</th>
+                        <th>Uwagi</th>
+                        <th>Akcje</th>
+                    </tr>
+                </thead>
+                <tbody id="excelTableBody">
+                    <!-- Wiersze generowane dynamicznie -->
+                </tbody>
+            </table>
         </div>
-
-        <div id="calendarEventsContainer"></div>
     </div>
 
     <!-- DOLNY PASEK NAWIGACJI -->
@@ -437,15 +484,14 @@
             <span class="nav-icon">📋</span>
             <span>Lista</span>
         </button>
-        <button class="nav-btn" onclick="showTab('calendar', this)">
-            <span class="nav-icon">📅</span>
-            <span>Kalendarz</span>
+        <button class="nav-btn" onclick="showTab('excel', this)">
+            <span class="nav-icon">📊</span>
+            <span>Tabela</span>
         </button>
     </nav>
 
     <script>
         document.getElementById('orderDate').valueAsDate = new Date();
-        document.getElementById('calendarPicker').valueAsDate = new Date();
 
         let database = JSON.parse(localStorage.getItem('app_clients_db')) || [];
         let activeFilter = 'all';
@@ -463,8 +509,8 @@
 
             if (tabName === 'list') {
                 renderList();
-            } else if (tabName === 'calendar') {
-                renderCalendarEvents();
+            } else if (tabName === 'excel') {
+                renderExcelTable();
             }
         }
 
@@ -546,8 +592,8 @@
             database = database.map(item => item.id === id ? {...item, done: !item.done} : item);
             saveToStorage();
             renderList();
-            if (document.getElementById('tab-calendar').classList.contains('active')) {
-                renderCalendarEvents();
+            if (document.getElementById('tab-excel').classList.contains('active')) {
+                renderExcelTable();
             }
         }
 
@@ -556,8 +602,8 @@
                 database = database.filter(item => item.id !== id);
                 saveToStorage();
                 renderList();
-                if (document.getElementById('tab-calendar').classList.contains('active')) {
-                    renderCalendarEvents();
+                if (document.getElementById('tab-excel').classList.contains('active')) {
+                    renderExcelTable();
                 }
             }
         }
@@ -567,41 +613,6 @@
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             if (btn) btn.classList.add('active');
             renderList();
-        }
-
-        function buildCardHtml(item, today) {
-            const isOverdue = !item.done && item.remindDate <= today;
-            return `
-                <div class="client-card vat-${item.vat}">
-                    <div class="card-head">
-                        <span class="client-title">${item.clientName}</span>
-                        <span class="badge badge-${item.vat}">VAT ${item.vat}%</span>
-                    </div>
-
-                    <div class="info-grid">
-                        ${item.address ? `<div class="full-width">📍 <strong>Adres:</strong> ${item.address}</div>` : ''}
-                        ${item.transNo ? `<div>🔢 <strong>Transakcja:</strong> ${item.transNo}</div>` : ''}
-                        ${item.contractNo ? `<div>📄 <strong>Umowa:</strong> ${item.contractNo}</div>` : ''}
-                        ${item.measureDate ? `<div>📐 <strong>Pomiar:</strong> ${item.measureDate}</div>` : ''}
-                        <div>📅 <strong>Zamówienie:</strong> ${item.orderDate}</div>
-                        ${item.fitter ? `<div class="full-width">👷 <strong>Montażysta:</strong> ${item.fitter}</div>` : ''}
-                        ${item.notes ? `<div class="full-width">📝 <strong>Uwagi:</strong> ${item.notes}</div>` : ''}
-                    </div>
-
-                    <div class="remind-pill ${isOverdue ? 'overdue' : ''}">
-                        <span>⏰ Weryfikacja (5 tyg.): <strong>${item.remindDate}</strong></span>
-                        <span>${item.done ? '✓ Gotowe' : (isOverdue ? '⚠️ SPRAWDŹ!' : 'W trakcie')}</span>
-                    </div>
-
-                    <div class="card-actions">
-                        <button class="btn-act act-check" onclick="toggleDone(${item.id})">
-                            ${item.done ? '✓ Zrobione' : '◯ Odhacz'}
-                        </button>
-                        <button class="btn-act act-edit" onclick="editRecord(${item.id})">Edytuj</button>
-                        <button class="btn-act act-del" onclick="deleteRecord(${item.id})">Usuń</button>
-                    </div>
-                </div>
-            `;
         }
 
         function renderList() {
@@ -622,29 +633,73 @@
             }
 
             filtered.forEach(item => {
-                container.innerHTML += buildCardHtml(item, today);
+                const isOverdue = !item.done && item.remindDate <= today;
+                container.innerHTML += `
+                    <div class="client-card vat-${item.vat}">
+                        <div class="card-head">
+                            <span class="client-title">${item.clientName}</span>
+                            <span class="badge badge-${item.vat}">VAT ${item.vat}%</span>
+                        </div>
+
+                        <div class="info-grid">
+                            ${item.address ? `<div class="full-width">📍 <strong>Adres:</strong> ${item.address}</div>` : ''}
+                            ${item.transNo ? `<div>🔢 <strong>Transakcja:</strong> ${item.transNo}</div>` : ''}
+                            ${item.contractNo ? `<div>📄 <strong>Umowa:</strong> ${item.contractNo}</div>` : ''}
+                            ${item.measureDate ? `<div>📐 <strong>Pomiar:</strong> ${item.measureDate}</div>` : ''}
+                            <div>📅 <strong>Zamówienie:</strong> ${item.orderDate}</div>
+                            ${item.fitter ? `<div class="full-width">👷 <strong>Montażysta:</strong> ${item.fitter}</div>` : ''}
+                            ${item.notes ? `<div class="full-width">📝 <strong>Uwagi:</strong> ${item.notes}</div>` : ''}
+                        </div>
+
+                        <div class="remind-pill ${isOverdue ? 'overdue' : ''}">
+                            <span>⏰ Weryfikacja (5 tyg.): <strong>${item.remindDate}</strong></span>
+                            <span>${item.done ? '✓ Gotowe' : (isOverdue ? '⚠️ SPRAWDŹ!' : 'W trakcie')}</span>
+                        </div>
+
+                        <div class="card-actions">
+                            <button class="btn-act act-check" onclick="toggleDone(${item.id})">
+                                ${item.done ? '✓ Zrobione' : '◯ Odhacz'}
+                            </button>
+                            <button class="btn-act act-edit" onclick="editRecord(${item.id})">Edytuj</button>
+                            <button class="btn-act act-del" onclick="deleteRecord(${item.id})">Usuń</button>
+                        </div>
+                    </div>
+                `;
             });
         }
 
-        function renderCalendarEvents() {
-            const selectedDate = document.getElementById('calendarPicker').value;
-            const container = document.getElementById('calendarEventsContainer');
-            container.innerHTML = '';
+        function renderExcelTable() {
+            const tbody = document.getElementById('excelTableBody');
+            tbody.innerHTML = '';
             const today = new Date().toISOString().split('T')[0];
 
-            const matched = database.filter(item => 
-                item.orderDate === selectedDate || 
-                item.measureDate === selectedDate || 
-                item.remindDate === selectedDate
-            );
-
-            if (matched.length === 0) {
-                container.innerHTML = `<p style="text-align:center; color: var(--text-muted); padding: 20px 0;">Brak zdarzeń dla dnia (${selectedDate}).</p>`;
+            if (database.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color: var(--text-muted); padding: 20px;">Brak danych w tabeli.</td></tr>`;
                 return;
             }
 
-            matched.forEach(item => {
-                container.innerHTML += buildCardHtml(item, today);
+            database.forEach(item => {
+                const isOverdue = !item.done && item.remindDate <= today;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span style="font-weight:bold; color:${item.done ? '#166534' : (isOverdue ? '#991b1b' : '#d97706')}">${item.done ? '✓ Gotowe' : (isOverdue ? '⚠️ PILNE' : 'W trakcie')}</span></td>
+                    <td style="font-weight:bold;">${item.clientName}</td>
+                    <td><span class="badge badge-${item.vat}">VAT ${item.vat}%</span></td>
+                    <td>${item.address || '-'}</td>
+                    <td>${item.transNo || '-'}</td>
+                    <td>${item.contractNo || '-'}</td>
+                    <td>${item.measureDate || '-'}</td>
+                    <td>${item.orderDate}</td>
+                    <td style="${isOverdue ? 'color:#991b1b; font-weight:bold;' : ''}">${item.remindDate}</td>
+                    <td>${item.fitter || '-'}</td>
+                    <td>${item.notes || '-'}</td>
+                    <td>
+                        <button class="btn-act act-check" style="padding:4px 8px; margin-right:4px;" onclick="toggleDone(${item.id})">Odhacz</button>
+                        <button class="btn-act act-edit" style="padding:4px 8px; margin-right:4px;" onclick="editRecord(${item.id})">Edytuj</button>
+                        <button class="btn-act act-del" style="padding:4px 8px;" onclick="deleteRecord(${item.id})">Usuń</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
             });
         }
 

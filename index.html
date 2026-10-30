@@ -655,8 +655,13 @@
                     </div>
                     <div class="form-group">
                         <label>Data zamówienia *</label>
-                        <input type="date" id="orderDate" required>
+                        <input type="date" id="orderDate" required onchange="autoCalculateRemindDate()">
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Data powiadomienia (np. 5 tyg.) *</label>
+                    <input type="date" id="remindDate" required>
                 </div>
 
                 <div class="form-group">
@@ -710,7 +715,7 @@
                         <th>Umowa</th>
                         <th>Pomiar</th>
                         <th>Zamówienie</th>
-                        <th>Weryfikacja (5tyg.)</th>
+                        <th>Powiadomienie</th>
                         <th>Montażysta</th>
                         <th>Uwagi</th>
                         <th>Akcje</th>
@@ -802,8 +807,22 @@
             }
         }
 
-        document.getElementById('orderDate').valueAsDate = new Date();
-        document.getElementById('calendarPicker').valueAsDate = new Date();
+        // Automatyczne ustawienie daty zamówienia na dzisiaj oraz wyliczenie domyślnych 35 dni
+        const todayObj = new Date();
+        document.getElementById('orderDate').valueAsDate = todayObj;
+        const defaultRemind = new Date(todayObj);
+        defaultRemind.setDate(defaultRemind.getDate() + 35);
+        document.getElementById('remindDate').value = defaultRemind.toISOString().split('T')[0];
+        document.getElementById('calendarPicker').valueAsDate = todayObj;
+
+        function autoCalculateRemindDate() {
+            const orderDateVal = document.getElementById('orderDate').value;
+            if (!orderDateVal) return;
+            const orderDateObj = new Date(orderDateVal);
+            const remindDateObj = new Date(orderDateObj);
+            remindDateObj.setDate(remindDateObj.getDate() + 35);
+            document.getElementById('remindDate').value = remindDateObj.toISOString().split('T')[0];
+        }
 
         let database = JSON.parse(localStorage.getItem('app_clients_db')) || [];
         let assemblyTypes = JSON.parse(localStorage.getItem('app_assembly_types')) || ['Okna', 'Drzwi', 'Rolety', 'Bramy', 'Żaluzje'];
@@ -921,7 +940,6 @@
             }
         }
 
-        // Inicjalizacja list przy starcie
         renderAssemblyDropdownAndManager();
         renderFittersDropdownAndManager();
 
@@ -954,13 +972,9 @@
             const contractNo = document.getElementById('contractNo').value;
             const measureDate = document.getElementById('measureDate').value;
             const orderDateVal = document.getElementById('orderDate').value;
+            const remindDateVal = document.getElementById('remindDate').value;
             const fitter = document.getElementById('fitter').value;
             const notes = document.getElementById('notes').value;
-
-            const orderDateObj = new Date(orderDateVal);
-            const remindDateObj = new Date(orderDateObj);
-            remindDateObj.setDate(remindDateObj.getDate() + 35);
-            const remindDateVal = remindDateObj.toISOString().split('T')[0];
 
             const record = {
                 id: editId ? Number(editId) : Date.now(),
@@ -995,6 +1009,7 @@
             document.getElementById('saveBtn').innerText = 'Zapisz Klienta';
             document.getElementById('cancelBtn').style.display = 'none';
             document.getElementById('orderDate').valueAsDate = new Date();
+            autoCalculateRemindDate();
             renderAssemblyDropdownAndManager();
             renderFittersDropdownAndManager();
         }
@@ -1012,6 +1027,7 @@
             document.getElementById('contractNo').value = item.contractNo || '';
             document.getElementById('measureDate').value = item.measureDate || '';
             document.getElementById('orderDate').value = item.orderDate || '';
+            document.getElementById('remindDate').value = item.remindDate || '';
             document.getElementById('fitter').value = item.fitter || fittersList[0];
             document.getElementById('notes').value = item.notes || '';
 
@@ -1073,7 +1089,7 @@
                     </div>
 
                     <div class="remind-pill ${isOverdue ? 'overdue' : ''}">
-                        <span>⏰ Weryfikacja (5 tyg.): <strong>${item.remindDate}</strong></span>
+                        <span>⏰ Powiadomienie: <strong>${item.remindDate}</strong></span>
                         <span>${item.done ? '✓ Gotowe' : (isOverdue ? '⚠️ SPRAWDŹ!' : 'W trakcie')}</span>
                     </div>
 

@@ -141,6 +141,11 @@
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
         }
 
+        input[readonly] {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
         /* ZARZĄDZANIE LISTAMI ROZWIJANYMI */
         .manager-box {
             background: var(--input-bg);
@@ -345,6 +350,18 @@
         .remind-pill.overdue {
             background: var(--alert-bg);
             color: var(--alert-text);
+        }
+
+        .extra-remind-pill {
+            margin-top: 6px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
         }
 
         .card-actions {
@@ -660,8 +677,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Data powiadomienia (np. 5 tyg.) *</label>
-                    <input type="date" id="remindDate" required>
+                    <label>Obowiązkowe powiadomienie (5 tyg. / 35 dni)</label>
+                    <input type="date" id="remindDate" readonly title="Wyliczane automatycznie (35 dni)">
+                </div>
+
+                <div class="form-group">
+                    <label>Dodatkowe powiadomienie (opcjonalnie)</label>
+                    <input type="date" id="extraRemindDate">
                 </div>
 
                 <div class="form-group">
@@ -715,7 +737,8 @@
                         <th>Umowa</th>
                         <th>Pomiar</th>
                         <th>Zamówienie</th>
-                        <th>Powiadomienie</th>
+                        <th>Powiadomienie (5tyg.)</th>
+                        <th>Dodatkowe przyp.</th>
                         <th>Montażysta</th>
                         <th>Uwagi</th>
                         <th>Akcje</th>
@@ -807,12 +830,10 @@
             }
         }
 
-        // Automatyczne ustawienie daty zamówienia na dzisiaj oraz wyliczenie domyślnych 35 dni
+        // Automatyczne ustawienie daty zamówienia i obowiązkowych 35 dni
         const todayObj = new Date();
         document.getElementById('orderDate').valueAsDate = todayObj;
-        const defaultRemind = new Date(todayObj);
-        defaultRemind.setDate(defaultRemind.getDate() + 35);
-        document.getElementById('remindDate').value = defaultRemind.toISOString().split('T')[0];
+        autoCalculateRemindDate();
         document.getElementById('calendarPicker').valueAsDate = todayObj;
 
         function autoCalculateRemindDate() {
@@ -972,7 +993,8 @@
             const contractNo = document.getElementById('contractNo').value;
             const measureDate = document.getElementById('measureDate').value;
             const orderDateVal = document.getElementById('orderDate').value;
-            const remindDateVal = document.getElementById('remindDate').value;
+            const remindDateVal = document.getElementById('remindDate').value; // Automatyczne 35 dni
+            const extraRemindDateVal = document.getElementById('extraRemindDate').value; // Opcjonalne
             const fitter = document.getElementById('fitter').value;
             const notes = document.getElementById('notes').value;
 
@@ -987,6 +1009,7 @@
                 measureDate,
                 orderDate: orderDateVal,
                 remindDate: remindDateVal,
+                extraRemindDate: extraRemindDateVal || '',
                 fitter,
                 notes,
                 done: editId ? (database.find(item => item.id == Number(editId))?.done || false) : false
@@ -1028,6 +1051,7 @@
             document.getElementById('measureDate').value = item.measureDate || '';
             document.getElementById('orderDate').value = item.orderDate || '';
             document.getElementById('remindDate').value = item.remindDate || '';
+            document.getElementById('extraRemindDate').value = item.extraRemindDate || '';
             document.getElementById('fitter').value = item.fitter || fittersList[0];
             document.getElementById('notes').value = item.notes || '';
 
@@ -1089,9 +1113,16 @@
                     </div>
 
                     <div class="remind-pill ${isOverdue ? 'overdue' : ''}">
-                        <span>⏰ Powiadomienie: <strong>${item.remindDate}</strong></span>
+                        <span>⏰ Weryfikacja (5 tyg.): <strong>${item.remindDate}</strong></span>
                         <span>${item.done ? '✓ Gotowe' : (isOverdue ? '⚠️ SPRAWDŹ!' : 'W trakcie')}</span>
                     </div>
+
+                    ${item.extraRemindDate ? `
+                        <div class="extra-remind-pill">
+                            <span>📌 Dodatkowe powiadomienie:</span>
+                            <strong>${item.extraRemindDate}</strong>
+                        </div>
+                    ` : ''}
 
                     <div class="card-actions">
                         <button class="btn-act act-check" onclick="toggleDone(${item.id})">
@@ -1132,7 +1163,7 @@
             const today = new Date().toISOString().split('T')[0];
 
             if (database.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color: var(--text-muted); padding: 20px;">Brak danych w tabeli.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; color: var(--text-muted); padding: 20px;">Brak danych w tabeli.</td></tr>`;
                 return;
             }
 
@@ -1150,6 +1181,7 @@
                     <td>${item.measureDate || '-'}</td>
                     <td>${item.orderDate}</td>
                     <td style="${isOverdue ? 'color:var(--alert-text); font-weight:bold;' : ''}">${item.remindDate}</td>
+                    <td>${item.extraRemindDate || '-'}</td>
                     <td>${item.fitter || '-'}</td>
                     <td>${item.notes || '-'}</td>
                     <td>
@@ -1205,7 +1237,8 @@
                 const matches = database.filter(item => 
                     item.orderDate === dayStr || 
                     item.measureDate === dayStr || 
-                    item.remindDate === dayStr
+                    item.remindDate === dayStr ||
+                    item.extraRemindDate === dayStr
                 );
 
                 const isToday = dayStr === todayStr;
@@ -1242,7 +1275,8 @@
             const matched = database.filter(item => 
                 item.orderDate === selectedDate || 
                 item.measureDate === selectedDate || 
-                item.remindDate === selectedDate
+                item.remindDate === selectedDate ||
+                item.extraRemindDate === selectedDate
             );
 
             if (matched.length === 0) {

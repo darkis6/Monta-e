@@ -53,7 +53,7 @@
             padding: 12px;
             max-width: 100%;
             margin: 0 auto;
-            padding-bottom: 80px;
+            padding-bottom: 90px;
             transition: background-color 0.2s, color 0.2s;
         }
 
@@ -550,7 +550,7 @@
         .dot-8 { background: var(--vat8-color); }
         .dot-23 { background: var(--vat23-color); }
 
-        /* DOLNY PASEK NAWIGACJI */
+        /* DOLNY PASEK NAWIGACJI Z OPCJĄ ZWIJANIA */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -565,6 +565,30 @@
             margin: 0 auto;
             height: 60px;
             z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .bottom-nav.collapsed {
+            transform: translateY(60px);
+        }
+
+        .nav-toggle-btn {
+            position: absolute;
+            top: -30px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+            color: var(--text-main);
+            width: 36px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+            box-shadow: 0 -3px 6px -1px rgba(0, 0, 0, 0.03);
         }
 
         .nav-btn {
@@ -835,7 +859,8 @@
     </div>
 
     <!-- DOLNY PASEK NAWIGACJI -->
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" id="bottomNav">
+        <button class="nav-toggle-btn" id="navToggleBtn" onclick="toggleBottomNav()" title="Zwiń / Rozwiń menu">▼</button>
         <button class="nav-btn active" onclick="showTab('form', this)">
             <span class="nav-icon">➕</span>
             <span>Nowy</span>
@@ -877,6 +902,18 @@
             } else {
                 icon.innerText = '🌙';
                 text.innerText = 'Tryb ciemny';
+            }
+        }
+
+        // Zwijanie / rozwijanie dolnego menu
+        function toggleBottomNav() {
+            const nav = document.getElementById('bottomNav');
+            const btn = document.getElementById('navToggleBtn');
+            nav.classList.toggle('collapsed');
+            if (nav.classList.contains('collapsed')) {
+                btn.innerText = '▲';
+            } else {
+                btn.innerText = '▼';
             }
         }
 
@@ -1236,7 +1273,6 @@
                 return;
             }
 
-            // Kopia bazy do sortowania bez modyfikowania głównej tablicy
             let sortedData = [...database];
             const sortMode = document.getElementById('tableSortSelect').value;
 

@@ -405,6 +405,7 @@
             border: 1px solid var(--border);
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+            margin-top: 10px;
         }
 
         .excel-table {
@@ -590,7 +591,7 @@
             margin-bottom: 2px;
         }
 
-        /* FILTRY */
+        /* FILTRY I SORTOWANIE */
         .filter-bar {
             display: flex;
             gap: 6px;
@@ -615,6 +616,23 @@
             color: white;
             border-color: var(--primary);
         }
+
+        .sort-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .sort-bar select {
+            padding: 6px 10px;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body data-theme="light">
@@ -637,15 +655,21 @@
                     <input type="text" id="clientName" placeholder="Imię i nazwisko" required>
                 </div>
 
-                <div class="form-group">
-                    <label>Stawka VAT *</label>
-                    <div class="vat-selector">
-                        <label class="vat-option v8">
-                            <input type="radio" name="vat" value="8" checked> VAT 8%
-                        </label>
-                        <label class="vat-option v23">
-                            <input type="radio" name="vat" value="23"> VAT 23%
-                        </label>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Stawka VAT *</label>
+                        <div class="vat-selector">
+                            <label class="vat-option v8">
+                                <input type="radio" name="vat" value="8" checked> VAT 8%
+                            </label>
+                            <label class="vat-option v23">
+                                <input type="radio" name="vat" value="23"> VAT 23%
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Kwota (zł)</label>
+                        <input type="number" step="0.01" id="amount" placeholder="0.00">
                     </div>
                 </div>
 
@@ -737,12 +761,25 @@
 
     <!-- ZAKŁADKA 3: TABELA EXCEL -->
     <div id="tab-excel" class="tab-content">
+        <div class="sort-bar">
+            <span>🔄 Sortuj tabelę:</span>
+            <select id="tableSortSelect" onchange="renderExcelTable()">
+                <option value="order_desc">Data zamówienia (od najnowszych)</option>
+                <option value="order_asc">Data zamówienia (od najstarszych)</option>
+                <option value="remind_asc">Data powiadomienia (najbliższe)</option>
+                <option value="amount_desc">Kwota (od najwyższej)</option>
+                <option value="amount_asc">Kwota (od najniższej)</option>
+                <option value="name_asc">Klient (A-Z)</option>
+            </select>
+        </div>
+
         <div class="table-responsive">
             <table class="excel-table">
                 <thead>
                     <tr>
                         <th>Status</th>
                         <th>Klient</th>
+                        <th>Kwota</th>
                         <th>VAT</th>
                         <th>Rodzaj montażu</th>
                         <th>Adres</th>
@@ -999,6 +1036,7 @@
 
             const editId = document.getElementById('editId').value;
             const clientName = document.getElementById('clientName').value;
+            const amount = document.getElementById('amount').value ? parseFloat(document.getElementById('amount').value) : 0;
             const vat = document.querySelector('input[name="vat"]:checked').value;
             const assemblyType = document.getElementById('assemblyType').value;
             const address = document.getElementById('address').value;
@@ -1015,6 +1053,7 @@
                 id: editId ? Number(editId) : Date.now(),
                 clientName,
                 clientEmail: 'dariusz.zajas@castorama.pl',
+                amount,
                 vat,
                 assemblyType,
                 address,
@@ -1057,6 +1096,7 @@
 
             document.getElementById('editId').value = item.id;
             document.getElementById('clientName').value = item.clientName;
+            document.getElementById('amount').value = item.amount || '';
             document.querySelector(`input[name="vat"][value="${item.vat}"]`).checked = true;
             document.getElementById('assemblyType').value = item.assemblyType || assemblyTypes[0];
             document.getElementById('address').value = item.address || '';
@@ -1084,7 +1124,7 @@
             const dateUsed = isExtra ? item.extraRemindDate : item.remindDate;
 
             const subject = encodeURIComponent(`${reminderType}: ${item.clientName} (${item.assemblyType || 'Montaż'})`);
-            const body = encodeURIComponent(`Dzień dobry,\n\nPrzypomnienie (${reminderType}) na dzień: ${dateUsed}.\nZamówienie z dnia: ${item.orderDate}\n\nKlient: ${item.clientName}\nRodzaj montażu: ${item.assemblyType || '-'}\nAdres: ${item.address || '-'}\nNr transakcji: ${item.transNo || '-'}\nNr umowy: ${item.contractNo || '-'}\nMontażysta: ${item.fitter || '-'}\nUwagi: ${item.notes || '-'}\n\nPozdrawiam,\n${item.fitter || 'Zespół'}`);
+            const body = encodeURIComponent(`Dzień dobry,\n\nPrzypomnienie (${reminderType}) na dzień: ${dateUsed}.\nZamówienie z dnia: ${item.orderDate}\n\nKlient: ${item.clientName}\nKwota: ${item.amount ? item.amount.toFixed(2) + ' zł' : '-'}\nRodzaj montażu: ${item.assemblyType || '-'}\nAdres: ${item.address || '-'}\nNr transakcji: ${item.transNo || '-'}\nNr umowy: ${item.contractNo || '-'}\nMontażysta: ${item.fitter || '-'}\nUwagi: ${item.notes || '-'}\n\nPozdrawiam,\n${item.fitter || 'Zespół'}`);
 
             window.location.href = `mailto:${emailTo}?subject=${subject}&body=${body}`;
         }
@@ -1130,7 +1170,8 @@
                     </div>
 
                     <div class="info-grid">
-                        ${item.assemblyType ? `<div class="full-width">🛠️ <strong>Rodzaj montażu:</strong> ${item.assemblyType}</div>` : ''}
+                        ${item.amount ? `<div>💰 <strong>Kwota:</strong> ${item.amount.toFixed(2)} zł</div>` : ''}
+                        ${item.assemblyType ? `<div class="${item.amount ? '' : 'full-width'}">🛠️ <strong>Montaż:</strong> ${item.assemblyType}</div>` : ''}
                         ${item.address ? `<div class="full-width">📍 <strong>Adres:</strong> ${item.address}</div>` : ''}
                         ${item.transNo ? `<div>🔢 <strong>Transakcja:</strong> ${item.transNo}</div>` : ''}
                         ${item.contractNo ? `<div>📄 <strong>Umowa:</strong> ${item.contractNo}</div>` : ''}
@@ -1191,16 +1232,31 @@
             const today = new Date().toISOString().split('T')[0];
 
             if (database.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; color: var(--text-muted); padding: 20px;">Brak danych w tabeli.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color: var(--text-muted); padding: 20px;">Brak danych w tabeli.</td></tr>`;
                 return;
             }
 
-            database.forEach(item => {
+            // Kopia bazy do sortowania bez modyfikowania głównej tablicy
+            let sortedData = [...database];
+            const sortMode = document.getElementById('tableSortSelect').value;
+
+            sortedData.sort((a, b) => {
+                if (sortMode === 'order_desc') return new Date(b.orderDate) - new Date(a.orderDate);
+                if (sortMode === 'order_asc') return new Date(a.orderDate) - new Date(b.orderDate);
+                if (sortMode === 'remind_asc') return new Date(a.remindDate) - new Date(b.remindDate);
+                if (sortMode === 'amount_desc') return (b.amount || 0) - (a.amount || 0);
+                if (sortMode === 'amount_asc') return (a.amount || 0) - (b.amount || 0);
+                if (sortMode === 'name_asc') return a.clientName.localeCompare(b.clientName);
+                return 0;
+            });
+
+            sortedData.forEach(item => {
                 const isOverdue = !item.done && item.remindDate <= today;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><span style="font-weight:bold; color:${item.done ? 'var(--vat8-color)' : (isOverdue ? 'var(--alert-text)' : 'var(--vat23-color)')}">${item.done ? '✓ Gotowe' : (isOverdue ? '⚠️ PILNE' : 'W trakcie')}</span></td>
                     <td style="font-weight:bold;">${item.clientName}</td>
+                    <td>${item.amount ? item.amount.toFixed(2) + ' zł' : '-'}</td>
                     <td><span class="badge badge-${item.vat}">VAT ${item.vat}%</span></td>
                     <td>${item.assemblyType || '-'}</td>
                     <td>${item.address || '-'}</td>

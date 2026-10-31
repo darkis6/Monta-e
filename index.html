@@ -343,6 +343,7 @@
             font-weight: 600;
             display: flex;
             justify-content: space-between;
+            align-items: center;
             background: var(--vat8-bg);
             color: var(--vat8-color);
         }
@@ -362,6 +363,18 @@
             color: var(--primary);
             display: flex;
             justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-email-icon {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-weight: 600;
         }
 
         .card-actions {
@@ -993,14 +1006,15 @@
             const contractNo = document.getElementById('contractNo').value;
             const measureDate = document.getElementById('measureDate').value;
             const orderDateVal = document.getElementById('orderDate').value;
-            const remindDateVal = document.getElementById('remindDate').value; // Automatyczne 35 dni
-            const extraRemindDateVal = document.getElementById('extraRemindDate').value; // Opcjonalne
+            const remindDateVal = document.getElementById('remindDate').value;
+            const extraRemindDateVal = document.getElementById('extraRemindDate').value;
             const fitter = document.getElementById('fitter').value;
             const notes = document.getElementById('notes').value;
 
             const record = {
                 id: editId ? Number(editId) : Date.now(),
                 clientName,
+                clientEmail: 'dariusz.zajas@castorama.pl',
                 vat,
                 assemblyType,
                 address,
@@ -1061,6 +1075,17 @@
             showTab('form', document.querySelectorAll('.nav-btn')[0]);
         }
 
+        function sendEmailNotification(id) {
+            const item = database.find(i => i.id === id);
+            if (!item) return;
+
+            const emailTo = 'dariusz.zajas@castorama.pl';
+            const subject = encodeURIComponent(`Weryfikacja 5-tygodniowa: ${item.clientName} (${item.assemblyType || 'Montaż'})`);
+            const body = encodeURIComponent(`Dzień dobry,\n\nPrzypomnienie o weryfikacji po 5 tygodniach (35 dni) od zamówienia (${item.orderDate}).\n\nKlient: ${item.clientName}\nRodzaj montażu: ${item.assemblyType || '-'}\nAdres: ${item.address || '-'}\nNr transakcji: ${item.transNo || '-'}\nNr umowy: ${item.contractNo || '-'}\nMontażysta: ${item.fitter || '-'}\nUwagi: ${item.notes || '-'}\n\nPozdrawiam,\n${item.fitter || 'Zespół'}`);
+
+            window.location.href = `mailto:${emailTo}?subject=${subject}&body=${body}`;
+        }
+
         function toggleDone(id) {
             database = database.map(item => item.id === id ? {...item, done: !item.done} : item);
             saveToStorage();
@@ -1113,8 +1138,8 @@
                     </div>
 
                     <div class="remind-pill ${isOverdue ? 'overdue' : ''}">
-                        <span>⏰ Weryfikacja (5 tyg.): <strong>${item.remindDate}</strong></span>
-                        <span>${item.done ? '✓ Gotowe' : (isOverdue ? '⚠️ SPRAWDŹ!' : 'W trakcie')}</span>
+                        <span>⏰ 5 tyg.: <strong>${item.remindDate}</strong></span>
+                        <button class="btn-email-icon" onclick="sendEmailNotification(${item.id})">📧 Wyślij e-mail</button>
                     </div>
 
                     ${item.extraRemindDate ? `
@@ -1185,9 +1210,10 @@
                     <td>${item.fitter || '-'}</td>
                     <td>${item.notes || '-'}</td>
                     <td>
-                        <button class="btn-act act-check" style="padding:4px 8px; margin-right:4px;" onclick="toggleDone(${item.id})">Odhacz</button>
-                        <button class="btn-act act-edit" style="padding:4px 8px; margin-right:4px;" onclick="editRecord(${item.id})">Edytuj</button>
-                        <button class="btn-act act-del" style="padding:4px 8px;" onclick="deleteRecord(${item.id})">Usuń</button>
+                        <button class="btn-email-icon" style="padding:4px 6px; margin-right:4px;" onclick="sendEmailNotification(${item.id})">Mail</button>
+                        <button class="btn-act act-check" style="padding:4px 6px; margin-right:4px;" onclick="toggleDone(${item.id})">Odhacz</button>
+                        <button class="btn-act act-edit" style="padding:4px 6px; margin-right:4px;" onclick="editRecord(${item.id})">Edytuj</button>
+                        <button class="btn-act act-del" style="padding:4px 6px;" onclick="deleteRecord(${item.id})">Usuń</button>
                     </td>
                 `;
                 tbody.appendChild(tr);

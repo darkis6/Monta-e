@@ -1075,13 +1075,16 @@
             showTab('form', document.querySelectorAll('.nav-btn')[0]);
         }
 
-        function sendEmailNotification(id) {
+        function sendEmailNotification(id, isExtra = false) {
             const item = database.find(i => i.id === id);
             if (!item) return;
 
             const emailTo = 'dariusz.zajas@castorama.pl';
-            const subject = encodeURIComponent(`Weryfikacja 5-tygodniowa: ${item.clientName} (${item.assemblyType || 'Montaż'})`);
-            const body = encodeURIComponent(`Dzień dobry,\n\nPrzypomnienie o weryfikacji po 5 tygodniach (35 dni) od zamówienia (${item.orderDate}).\n\nKlient: ${item.clientName}\nRodzaj montażu: ${item.assemblyType || '-'}\nAdres: ${item.address || '-'}\nNr transakcji: ${item.transNo || '-'}\nNr umowy: ${item.contractNo || '-'}\nMontażysta: ${item.fitter || '-'}\nUwagi: ${item.notes || '-'}\n\nPozdrawiam,\n${item.fitter || 'Zespół'}`);
+            const reminderType = isExtra ? 'Dodatkowe powiadomienie' : 'Weryfikacja 5-tygodniowa';
+            const dateUsed = isExtra ? item.extraRemindDate : item.remindDate;
+
+            const subject = encodeURIComponent(`${reminderType}: ${item.clientName} (${item.assemblyType || 'Montaż'})`);
+            const body = encodeURIComponent(`Dzień dobry,\n\nPrzypomnienie (${reminderType}) na dzień: ${dateUsed}.\nZamówienie z dnia: ${item.orderDate}\n\nKlient: ${item.clientName}\nRodzaj montażu: ${item.assemblyType || '-'}\nAdres: ${item.address || '-'}\nNr transakcji: ${item.transNo || '-'}\nNr umowy: ${item.contractNo || '-'}\nMontażysta: ${item.fitter || '-'}\nUwagi: ${item.notes || '-'}\n\nPozdrawiam,\n${item.fitter || 'Zespół'}`);
 
             window.location.href = `mailto:${emailTo}?subject=${subject}&body=${body}`;
         }
@@ -1139,13 +1142,13 @@
 
                     <div class="remind-pill ${isOverdue ? 'overdue' : ''}">
                         <span>⏰ 5 tyg.: <strong>${item.remindDate}</strong></span>
-                        <button class="btn-email-icon" onclick="sendEmailNotification(${item.id})">📧 Wyślij e-mail</button>
+                        <button class="btn-email-icon" onclick="sendEmailNotification(${item.id}, false)">📧 Wyślij e-mail</button>
                     </div>
 
                     ${item.extraRemindDate ? `
                         <div class="extra-remind-pill">
-                            <span>📌 Dodatkowe powiadomienie:</span>
-                            <strong>${item.extraRemindDate}</strong>
+                            <span>📌 Dodatkowe: <strong>${item.extraRemindDate}</strong></span>
+                            <button class="btn-email-icon" onclick="sendEmailNotification(${item.id}, true)">📧 Wyślij e-mail</button>
                         </div>
                     ` : ''}
 
@@ -1205,12 +1208,11 @@
                     <td>${item.contractNo || '-'}</td>
                     <td>${item.measureDate || '-'}</td>
                     <td>${item.orderDate}</td>
-                    <td style="${isOverdue ? 'color:var(--alert-text); font-weight:bold;' : ''}">${item.remindDate}</td>
-                    <td>${item.extraRemindDate || '-'}</td>
+                    <td style="${isOverdue ? 'color:var(--alert-text); font-weight:bold;' : ''}">${item.remindDate} <button class="btn-email-icon" style="padding:2px 4px; font-size:0.6rem;" onclick="sendEmailNotification(${item.id}, false)">Mail</button></td>
+                    <td>${item.extraRemindDate ? `${item.extraRemindDate} <button class="btn-email-icon" style="padding:2px 4px; font-size:0.6rem;" onclick="sendEmailNotification(${item.id}, true)">Mail</button>` : '-'}</td>
                     <td>${item.fitter || '-'}</td>
                     <td>${item.notes || '-'}</td>
                     <td>
-                        <button class="btn-email-icon" style="padding:4px 6px; margin-right:4px;" onclick="sendEmailNotification(${item.id})">Mail</button>
                         <button class="btn-act act-check" style="padding:4px 6px; margin-right:4px;" onclick="toggleDone(${item.id})">Odhacz</button>
                         <button class="btn-act act-edit" style="padding:4px 6px; margin-right:4px;" onclick="editRecord(${item.id})">Edytuj</button>
                         <button class="btn-act act-del" style="padding:4px 6px;" onclick="deleteRecord(${item.id})">Usuń</button>
